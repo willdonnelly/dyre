@@ -13,6 +13,8 @@ defaultConf = Config { errorMsg = Nothing
 realMain :: Config -> IO ()
 realMain (Config err msg) = do
     putStrLn "Entered program"
+    args <- getArgs
+    putStrLn $ "Arguments: " ++ show args
     case err of
          Just eMsg -> putStrLn $ "Error: " ++ eMsg
          Nothing   -> putStrLn $ "Message: " ++ msg

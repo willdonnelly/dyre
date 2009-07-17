@@ -1,13 +1,13 @@
 module Dyre.Launch ( launchMain ) where
 
 import Dyre.Params
-
-import System.FilePath      ( (</>) )
-import System.Directory     ( doesFileExist, removeFile )
+import Data.List          ( isPrefixOf, (\\) )
+import System.Environment ( getArgs, withArgs )
 
 launchMain :: Params cfgType -> Maybe String -> cfgType -> IO ()
 launchMain params errors cfg = do
-    putStrLn $ "Entering main program"
+    args <- getArgs
+    let newArgs = withArgs (args \\ ["--force-reconf", "--dyre-debug"])
     case errors of
-         Nothing -> realMain params $ cfg
-         Just er -> realMain params $ (confError params) er cfg
+         Nothing -> newArgs (realMain params $ cfg)
+         Just er -> newArgs (realMain params $ (confError params) er cfg)

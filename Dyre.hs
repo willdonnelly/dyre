@@ -35,10 +35,14 @@ runWith params@Params{defaultConf = cfg} =
 --   whether we're in the original or the custom executable.
 wrapMain :: Bool -> Params cfgType -> cfgType -> IO ()
 wrapMain orig params@Params{realMain = realMain, projectName = pName} cfg = do
+    args <- getArgs
+    let debug = "--dyre-debug" `elem` args
+    let cwd = getCurrentDirectory
+
     -- Get all three important paths
-    bPath <- binDir params
-    tPath <- tmpDir params
-    cPath <- configDir params
+    bPath <- if debug then cwd else binDir params
+    tPath <- if debug then cwd else tmpDir params
+    cPath <- if debug then cwd else configDir params
     -- Calculate the names of the important files
     let binFile = bPath </> pName
     let tmpFile = tPath </> pName ++ "-" ++ os ++ "-" ++ arch
@@ -50,8 +54,10 @@ wrapMain orig params@Params{realMain = realMain, projectName = pName} cfg = do
 
     -- If there's a config file, and the temp binary is older than something
     -- else, then we should recompile.
-    errors <- if (cfgT /= Nothing) && ((tmpT < cfgT) || (tmpT < binT))
-                 then customCompile params cfgFile tmpFile
+    errors <- if (cfgT /= Nothing) && or [ tmpT < cfgT
+                                         , tmpT < binT
+                                         , "--force-reconf" `elem`args ]
+                 then customCompile params cfgFile tmpFile tPath
                  else return Nothing
 
     -- If there's a custom binary and we're not it, run it. Otherwise

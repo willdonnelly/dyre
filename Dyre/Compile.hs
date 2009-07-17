@@ -13,11 +13,12 @@ import Dyre.Params
 -- | Attempts to compile the configuration file. Errors will be stored in
 --   the '<tmpPath>/errors.log' file. Will return a boolean indicating if
 --   there is a custom binary to execute.
-customCompile :: Params cfgType -> FilePath -> FilePath -> IO (Maybe String)
-customCompile params@Params{statusOut = output} cfgFile tmpFile = do
+customCompile :: Params cfgType -> FilePath -> FilePath
+              -> FilePath -> IO (Maybe String)
+customCompile params@Params{statusOut = output}
+              cfgFile tmpFile tmpPath = do
     -- Prepare to compile. Create the temp directory and open the error file.
     output $ "Configuration '" ++ cfgFile ++  "' changed. Recompiling."
-    tmpPath <- tmpDir params
     createDirectoryIfMissing True tmpPath
     let errFile = tmpPath </> "errors.log"
     result <- bracket (openFile errFile WriteMode) hClose $ \errHandle -> do
