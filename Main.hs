@@ -1,0 +1,3 @@
+import TestDyre
+
+main = runDefault
