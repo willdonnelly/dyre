@@ -3,17 +3,18 @@ module Dyre
   , runWith
   ) where
 
-import System              ( getArgs )
-import System.IO           ( hPutStrLn, stderr, hClose, openFile, IOMode(..) )
-import System.Info         ( compilerName, os, arch )
-import System.Time         ( ClockTime )
-import System.Exit         ( ExitCode(..) )
-import System.Process      ( runProcess, waitForProcess )
-import System.FilePath     ( (</>) )
-import System.Directory    ( getModificationTime, doesFileExist, removeFile
-                           , createDirectoryIfMissing, getCurrentDirectory )
-import Control.Exception   ( bracket )
-import qualified GHC.Paths ( ghc )
+import System               ( getArgs )
+import System.IO            ( hPutStrLn, stderr, hClose, openFile, IOMode(..) )
+import System.Info          ( compilerName, os, arch )
+import System.Time          ( ClockTime )
+import System.Exit          ( ExitCode(..) )
+import System.Process       ( runProcess, waitForProcess )
+import System.Posix.Process ( executeFile )
+import System.FilePath      ( (</>) )
+import System.Directory     ( getModificationTime, doesFileExist, removeFile
+                            , createDirectoryIfMissing, getCurrentDirectory )
+import Control.Exception    ( bracket )
+import qualified GHC.Paths  ( ghc )
 
 data Params cfgType = Params
     { projectName :: String
@@ -137,5 +138,7 @@ recompile params cfgFile tmpFile = do
 execCustom :: FilePath -> IO ()
 execCustom tmpFile = do
     hPutStrLn stderr $ "Launching custom binary '" ++ tmpFile ++ "'\n"
+    args <- getArgs
+    executeFile tmpFile False args Nothing
 
 -- System.Environment.withArgs
