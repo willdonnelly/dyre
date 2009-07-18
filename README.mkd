@@ -1,0 +1,41 @@
+Dyre - A Dynamic Reconfiguration Library for Haskell
+====================================================
+
+Dyre implements a basic interface for dynamically recompiling Haskell programs
+with new configurations. The inspiration for all this is, of course, Xmonad's
+reconfiguration functionality. It is similar in usage to the HConf library
+which was written for the Yi editor.
+
+But while HConf allows the program to be restarted under itself without losing
+state data, Dyre leaves that capability up to the program using it. This design
+choice was made because there are many possible programs which could need to use
+dynamic recompilation, but for which the idea of persistent state is utterly
+meaningless.
+
+Basic Usage
+-----------
+
+The entire interface to the Dyre library consists of two items: a datatype for
+configuration data, and a function which makes that data into a tuple of entry
+point functions.
+
+> import qualified Config.Dyre as Dyre
+> (runDefault, dyreExample) = Dyre.runWith Dyre.Params
+>     {
+>     Dyre.projectName = "dyreExample"
+>     ... Configuration omitted for clarity ...
+>     Dyre.statusOut   = hPutStrLn stderr
+>     }
+
+In the above code snippet, the value of 'runDefault' will be an IO action which
+represents the main entry point of the program. It should be called in the main
+function of the default executable. The 'dyreExample' function, on the other
+hand, maps from a custom configuration to an IO action, and should be called in
+a custom config file as follows:
+
+> -- ~/.dyreExample/dyreExample.hs --
+> import DyreExample
+> main = dyreExample $ defaultConf { something = "Custom Value" }
+
+A complete, working example of a project configured with Dyre can be found in
+the documentation / comments for the 'Config.Dyre' module.
