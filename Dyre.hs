@@ -40,9 +40,10 @@ wrapMain orig params@Params{realMain = realMain, projectName = pName} cfg = do
     let cwd = getCurrentDirectory
 
     -- Get all three important paths
-    bPath <- if debug then cwd else binDir params
-    tPath <- if debug then cwd else tmpDir params
-    cPath <- if debug then cwd else configDir params
+    cwd <- getCurrentDirectory
+    bPath <- if not debug then binDir params    else return cwd
+    tPath <- if not debug then tmpDir params    else return $ cwd </> "tmp"
+    cPath <- if not debug then configDir params else return cwd
     -- Calculate the names of the important files
     let binFile = bPath </> pName
     let tmpFile = tPath </> pName ++ "-" ++ os ++ "-" ++ arch

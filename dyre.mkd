@@ -1,6 +1,0 @@
-Dyre - Dynamic Reconfiguration For Haskell
-==========================================
-
-Dyre is a Haskell library for program configuration in the style of XMonad.
-It only handles configuration and recompiling, and leaves handling state and
-restarting the program up to the calling application.
