@@ -1,3 +1,58 @@
+{- |
+The main module for Dyre. The items that it exports are all that
+should ever be needed by a program which uses Dyre. The 'Params'
+structure is used for all configuration data, and the 'runWith'
+function is used to obtain the program entry points for the given
+configuration data.
+
+For example, a basic program might use Dyre in the following way:
+
+>-- DyreExample.hs --
+>module DyreExample ( runDefault, dyreExample, Config(..), defaultConf ) where
+>
+>import qualified Dyre as Dyre
+>import System
+>import System.IO
+>import System.Directory
+>import System.FilePath
+>
+>data Config = Config { errorMsg :: Maybe String, message  :: String }
+>defaultConf = Config { errorMsg = Nothing, message  = "Hello, world!" }
+>confError msg cfg = cfg {errorMsg = Just msg}
+>
+>realMain (Config err msg) = do
+>    putStrLn "Entered program"
+>    case err of
+>         Just eMsg -> putStrLn $ "Error:   " ++ eMsg
+>         Nothing   -> putStrLn $ "Message: " ++ msg
+>
+>(runDefault, dyreExample) = Dyre.runWith Dyre.Params
+>    { Dyre.projectName  = "dyreExample"
+>    , Dyre.configDir    = getAppUserDataDirectory "dyreExample"
+>    , Dyre.tmpDir       = do configDir <- getAppUserDataDirectory "dyreExample"
+>                             return $ configDir </> "tmp"
+>    , Dyre.binDir       = getCurrentDirectory
+>    -- ^ This only works when the current directory holds the
+>    --   binary. In a full project, the Cabal-generated module
+>    --   'Paths_<project>' provides a 'getBinDir' function that
+>    --   should be used.
+>    , Dyre.defaultConf  = defaultConf
+>    , Dyre.confError    = confError
+>    , Dyre.realMain     = realMain
+>    , Dyre.hidePackages = []
+>    , Dyre.ghcOpts      = []
+>    , Dyre.statusOut    = hPutStrLn stderr
+>    }
+
+>-- Main.hs --
+>import DyreExample
+>main = runDefault
+
+This will set up a basic project which looks for a configuration file
+in ~/.dyreExample, and can recompile and launch it if necessary. The
+only major flaw in this snippet is the use of the 'getCurrentDirectory'
+function for the binary directory.
+-}
 module Dyre ( runWith, Params(..) ) where
 
 import System            ( getArgs )
@@ -71,5 +126,3 @@ maybeModTime path = do
        then do modTime <- getModificationTime path
                return . Just $ modTime
        else return Nothing
-
--- System.Environment.withArgs

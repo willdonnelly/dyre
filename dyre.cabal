@@ -9,6 +9,8 @@ description:   Dyre implements dynamic reconfiguration facilities after the
                Dyre narrows its focus down to the task of compiling and running
                custom binaries based on user configurations.
 
+               A basic usage example can be found in the main 'Dyre' module.
+
 homepage:      http://github.com/willdonnelly/dyre
 bug-reports:   http://github.com/willdonnelly/dyre/issues
 stability:     alpha

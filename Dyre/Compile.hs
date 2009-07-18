@@ -1,3 +1,13 @@
+{- |
+The functions defined here should never be used directly by a program.
+They are documented for readability and maintenance purposes, and their
+behaviour should never be relied upon to remain the same. Only the
+exports from the main 'Dyre' module should be relied upon.
+
+That said, the functions herein deal with compilation of the custom
+configuration. The majority of the code actually deals with error
+handling, and not the compilation itself /per se/.
+-}
 module Dyre.Compile ( customCompile ) where
 
 import System.IO         ( openFile, hClose, IOMode(..) )

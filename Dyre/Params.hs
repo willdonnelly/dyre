@@ -1,9 +1,15 @@
+{- |
+This module defines the 'Params' datatype which Dyre uses to define
+all program-specific configuration data. This module doesn't need to
+be imported specially because the 'Params' datatype is re-exported
+from the main 'Dyre' module.
+-}
 module Dyre.Params ( Params(..) ) where
 
 data Params cfgType = Params
     { projectName  :: String
     -- ^ The name of the project. This needs to also be the name of
-    --   the executablei, and the name of the configuration file.
+    --   the executable, and the name of the configuration file.
     , configDir    :: IO FilePath
     -- ^ The directory to look for a configuration file in.
     , tmpDir       :: IO FilePath
@@ -31,5 +37,7 @@ data Params cfgType = Params
     -- ^ Miscellaneous GHC compilation settings go here
     , statusOut    :: String -> IO ()
     -- ^ A status output function. Will be called with messages
-    --   when Dyre recompiles or launches anything.
+    --   when Dyre recompiles or launches anything. A good value
+    --   is 'hPutStrLn stderr', assuming there is no pressing
+    --   reason to not put messages on stderr.
     }
