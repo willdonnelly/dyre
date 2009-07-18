@@ -1,3 +1,0 @@
-import TestDyre
-
-main = runDefault

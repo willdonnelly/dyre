@@ -1,0 +1,26 @@
+Name:          dyre
+Version:       0.1
+Category:      Example
+Synopsis:      Dynamic reconfiguration in Haskell
+
+Homepage:      http://github.com/willdonnelly/dyre
+Bug-Reports:   http://github.com/willdonnelly/dyre/issues
+Stability:     alpha
+Author:        Will Donnelly
+Maintainer:    Will Donnelly <will.donnelly@gmail.com>
+Copyright:     (c) 2009 Will Donnelly
+
+Build-Type:    Simple
+Cabal-Version: >= 1.2
+
+library
+  exposed-modules: Dyre,
+                   Dyre.Params,
+                   Dyre.Compile,
+                   Dyre.Exec,
+                   Dyre.Launch
+  build-depends:   base, ghc-paths, directory, filepath, process, old-time, haskell98, unix
+
+source-repository head
+  type:      git
+  location:  git://github.com/willdonnelly/dyre.git
