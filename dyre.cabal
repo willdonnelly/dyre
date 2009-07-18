@@ -1,25 +1,25 @@
-Name:          dyre
-Version:       0.1
-Category:      Development
-Synopsis:      Dynamic reconfiguration in Haskell
+name:          dyre
+version:       0.1
+category:      Development
+synopsis:      Dynamic reconfiguration in Haskell
 
-Description:   Dyre implements dynamic reconfiguration facilities after the
+description:   Dyre implements dynamic reconfiguration facilities after the
                style of Xmonad. Unlike Yi's HConf, Dyre doesn't bother to
                implement support for restarting and persisting state. Instead,
                Dyre narrows its focus down to the task of compiling and running
                custom binaries based on user configurations.
 
-Homepage:      http://github.com/willdonnelly/dyre
-Bug-Reports:   http://github.com/willdonnelly/dyre/issues
-Stability:     alpha
-Author:        Will Donnelly
-Maintainer:    Will Donnelly <will.donnelly@gmail.com>
-Copyright:     (c) 2009 Will Donnelly
-License:       BSD3
-License-File:  LICENSE
+homepage:      http://github.com/willdonnelly/dyre
+bug-reports:   http://github.com/willdonnelly/dyre/issues
+stability:     alpha
+author:        Will Donnelly
+maintainer:    Will Donnelly <will.donnelly@gmail.com>
+copyright:     (c) 2009 Will Donnelly
+license:       BSD3
+license-file:  LICENSE
 
-Build-Type:    Simple
-Cabal-Version: >= 1.2
+build-type:    Simple
+cabal-version: >= 1.2
 
 library
   exposed-modules: Dyre,
@@ -27,7 +27,8 @@ library
                    Dyre.Compile,
                    Dyre.Exec,
                    Dyre.Launch
-  build-depends:   base, ghc-paths, directory, filepath, process, old-time, haskell98, unix
+  build-depends:   base, directory, filepath, process,
+                   old-time, haskell98, unix, ghc-paths
 
 source-repository head
   type:      git
