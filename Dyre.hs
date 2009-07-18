@@ -1,19 +1,13 @@
-module Dyre
-  ( Params (..)
-  , runWith
-  ) where
+module Dyre ( runWith, Params(..) ) where
 
-import System               ( getArgs )
-import System.IO            ( hPutStrLn, stderr, hClose, openFile, IOMode(..) )
-import System.Info          ( compilerName, os, arch )
-import System.Time          ( ClockTime )
-import System.Exit          ( ExitCode(..) )
-import System.Process       ( runProcess, waitForProcess )
-import System.FilePath      ( (</>) )
-import System.Directory     ( getModificationTime, doesFileExist, removeFile
-                            , createDirectoryIfMissing, getCurrentDirectory )
-import Control.Exception    ( bracket )
-import qualified GHC.Paths  ( ghc )
+import System            ( getArgs )
+import System.IO         ( openFile, IOMode(..), hClose )
+import System.Info       ( os, arch )
+import System.Time       ( ClockTime )
+import System.FilePath   ( (</>) )
+import Control.Exception ( bracket )
+import System.Directory  ( getModificationTime, doesFileExist,
+                           getCurrentDirectory )
 
 import Dyre.Params  ( Params(..) )
 import Dyre.Compile ( customCompile )
@@ -64,7 +58,7 @@ wrapMain orig params@Params{realMain = realMain, projectName = pName} cfg = do
     -- If there's a custom binary and we're not it, run it. Otherwise
     -- just launch the main function.
     customExists <- doesFileExist tmpFile
-    if (customExists && orig)
+    if customExists && orig
        then customExec params tmpFile
        else launchMain params errors cfg
 
