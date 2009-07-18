@@ -27,9 +27,9 @@ point functions.
         Dyre.statusOut   = hPutStrLn stderr
         }
 
-In the above code snippet, the value of 'runDefault' will be an IO action which
+In the above code snippet, the value of `runDefault` will be an IO action which
 represents the main entry point of the program. It should be called in the main
-function of the default executable. The 'dyreExample' function, on the other
+function of the default executable. The `dyreExample` function, on the other
 hand, maps from a custom configuration to an IO action, and should be called in
 a custom config file as follows:
 
@@ -38,4 +38,4 @@ a custom config file as follows:
     main = dyreExample $ defaultConf { something = "Custom Value" }
 
 A complete, working example of a project configured with Dyre can be found in
-the documentation / comments for the 'Config.Dyre' module.
+the documentation / comments for the `Config.Dyre` module.
