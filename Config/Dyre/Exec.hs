@@ -7,9 +7,9 @@ exports from the main 'Dyre' module should be relied upon.
 That said, the functions defined here handle the messy business of
 executing the custom binary on different platforms.
 -}
-module Dyre.Exec ( customExec ) where
+module Config.Dyre.Exec ( customExec ) where
 
-import Dyre.Params
+import Config.Dyre.Params
 
 import System               ( getArgs )
 import System.Directory     ( doesFileExist )

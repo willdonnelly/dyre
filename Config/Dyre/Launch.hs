@@ -9,9 +9,9 @@ function. It contains special handling for updating the config
 with error data, as well as removing a few special command-line
 options that only Dyre needs to see.
 -}
-module Dyre.Launch ( launchMain ) where
+module Config.Dyre.Launch ( launchMain ) where
 
-import Dyre.Params
+import Config.Dyre.Params ( Params(..) )
 import Data.List          ( isPrefixOf, (\\) )
 import System.Environment ( getArgs, withArgs )
 

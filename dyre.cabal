@@ -21,15 +21,15 @@ license:       BSD3
 license-file:  LICENSE
 
 build-type:    Simple
-cabal-version: >= 1.2
+cabal-version: >= 1.6
 
 library
-  exposed-modules: Dyre,
-                   Dyre.Params,
-                   Dyre.Compile,
-                   Dyre.Exec,
-                   Dyre.Launch
-  build-depends:   base, directory, filepath, process,
+  exposed-modules: Config.Dyre,
+                   Config.Dyre.Params,
+                   Config.Dyre.Compile,
+                   Config.Dyre.Exec,
+                   Config.Dyre.Launch
+  build-depends:   base >= 4 && < 5, directory, filepath, process,
                    old-time, haskell98, unix, ghc-paths
 
 source-repository head

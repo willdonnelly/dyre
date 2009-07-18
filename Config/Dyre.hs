@@ -10,7 +10,7 @@ For example, a basic program might use Dyre in the following way:
 >-- DyreExample.hs --
 >module DyreExample ( runDefault, dyreExample, Config(..), defaultConf ) where
 >
->import qualified Dyre as Dyre
+>import qualified Config.Dyre as Dyre
 >import System
 >import System.IO
 >import System.Directory
@@ -53,7 +53,7 @@ in ~/.dyreExample, and can recompile and launch it if necessary. The
 only major flaw in this snippet is the use of the 'getCurrentDirectory'
 function for the binary directory.
 -}
-module Dyre ( runWith, Params(..) ) where
+module Config.Dyre ( runWith, Params(..) ) where
 
 import System            ( getArgs )
 import System.IO         ( openFile, IOMode(..), hClose )
@@ -64,10 +64,10 @@ import Control.Exception ( bracket )
 import System.Directory  ( getModificationTime, doesFileExist,
                            getCurrentDirectory )
 
-import Dyre.Params  ( Params(..) )
-import Dyre.Compile ( customCompile )
-import Dyre.Exec    ( customExec )
-import Dyre.Launch  ( launchMain )
+import Config.Dyre.Params  ( Params(..) )
+import Config.Dyre.Compile ( customCompile )
+import Config.Dyre.Exec    ( customExec )
+import Config.Dyre.Launch  ( launchMain )
 
 
 -- | This function returns a tuple of functions: (runDefault, runCustom)

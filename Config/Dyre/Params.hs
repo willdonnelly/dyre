@@ -4,7 +4,7 @@ all program-specific configuration data. This module doesn't need to
 be imported specially because the 'Params' datatype is re-exported
 from the main 'Dyre' module.
 -}
-module Dyre.Params ( Params(..) ) where
+module Config.Dyre.Params ( Params(..) ) where
 
 data Params cfgType = Params
     { projectName  :: String

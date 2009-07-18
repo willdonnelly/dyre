@@ -8,7 +8,7 @@ That said, the functions herein deal with compilation of the custom
 configuration. The majority of the code actually deals with error
 handling, and not the compilation itself /per se/.
 -}
-module Dyre.Compile ( customCompile ) where
+module Config.Dyre.Compile ( customCompile ) where
 
 import System.IO         ( openFile, hClose, IOMode(..) )
 import System.Exit       ( ExitCode(..) )
@@ -18,7 +18,7 @@ import System.Directory  ( getCurrentDirectory, createDirectoryIfMissing, doesFi
 import Control.Exception ( bracket )
 import GHC.Paths         ( ghc )
 
-import Dyre.Params
+import Config.Dyre.Params
 
 -- | Attempts to compile the configuration file. Errors will be stored in
 --   the '<tmpPath>/errors.log' file. Will return a boolean indicating if
