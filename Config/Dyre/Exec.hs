@@ -11,8 +11,8 @@ module Config.Dyre.Exec ( customExec ) where
 
 import Config.Dyre.Params
 
-import System               ( getArgs )
 import System.Directory     ( doesFileExist )
+import System.Environment   ( getArgs )
 import System.Posix.Process ( executeFile )
 import Data.List            ( (\\) )
 

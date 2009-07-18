@@ -55,14 +55,13 @@ function for the binary directory.
 -}
 module Config.Dyre ( runWith, Params(..) ) where
 
-import System            ( getArgs )
-import System.IO         ( openFile, IOMode(..), hClose )
-import System.Info       ( os, arch )
-import System.Time       ( ClockTime )
-import System.FilePath   ( (</>) )
-import Control.Exception ( bracket )
-import System.Directory  ( getModificationTime, doesFileExist,
-                           getCurrentDirectory )
+import System.IO          ( openFile, IOMode(..), hClose )
+import System.Info        ( os, arch )
+import System.FilePath    ( (</>) )
+import Control.Exception  ( bracket )
+import System.Environment ( getArgs )
+import System.Directory   ( getModificationTime, doesFileExist,
+                            getCurrentDirectory )
 
 import Config.Dyre.Params  ( Params(..) )
 import Config.Dyre.Compile ( customCompile )
@@ -119,7 +118,6 @@ wrapMain orig params@Params{realMain = realMain, projectName = pName} cfg = do
 
 -- | Check if a file exists. If it exists, return Just the modification
 --   time. If it doesn't exist, return Nothing.
-maybeModTime :: FilePath -> IO (Maybe ClockTime)
 maybeModTime path = do
     fileExists <- doesFileExist path
     if fileExists
