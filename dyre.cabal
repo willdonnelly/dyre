@@ -4,7 +4,7 @@ category:      Development
 synopsis:      Dynamic reconfiguration in Haskell
 
 description:   Dyre implements dynamic reconfiguration facilities after the
-               style of Xmonad. Unlike Yi's HConf, Dyre doesn't bother to
+               style of Xmonad. Unlike Yi's 'HConf', Dyre doesn't bother to
                implement support for restarting and persisting state. Instead,
                Dyre narrows its focus down to the task of compiling and running
                custom binaries based on user configurations.
