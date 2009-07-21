@@ -45,11 +45,7 @@ These paths can be overridden by giving a custom value to the 'configDir'
 and 'cacheDir' elements, but it is recommended that you not bother.
 -}
 
-module Config.Dyre
-    ( wrapMain
-    , Params(..)
-    , defaultParams
-    ) where
+module Config.Dyre ( wrapMain, Params(..), defaultParams ) where
 
 import Data.Maybe         ( fromMaybe )
 import System.IO          ( openFile, IOMode(..), hClose, hPutStrLn, stderr )
@@ -59,8 +55,8 @@ import Control.Exception  ( bracket )
 import System.Environment ( getArgs )
 import System.Directory   ( getModificationTime, doesFileExist, getCurrentDirectory )
 
-import Data.XDG.BaseDir              ( getUserCacheDir, getUserConfigDir )
-import System.Environment.Executable ( getExecutablePath )
+import System.Environment.XDG.BaseDir ( getUserCacheDir, getUserConfigDir )
+import System.Environment.Executable  ( getExecutablePath )
 
 import Config.Dyre.Params  ( Params(..) )
 import Config.Dyre.Compile ( customCompile )
