@@ -26,7 +26,7 @@ For example, a basic program might use Dyre in the following way:
 >         Just eMsg -> putStrLn $ "Error:   " ++ eMsg
 >         Nothing   -> putStrLn $ "Message: " ++ msg
 >
->(runDefault, dyreExample) = Dyre.runWith Dyre.Params
+>dyreExample = Dyre.wrapMain Dyre.Params
 >    { Dyre.projectName  = "dyreExample"
 >    , Dyre.configDir    = getAppUserDataDirectory "dyreExample"
 >    , Dyre.tmpDir       = do configDir <- getAppUserDataDirectory "dyreExample"
@@ -46,14 +46,14 @@ For example, a basic program might use Dyre in the following way:
 
 >-- Main.hs --
 >import DyreExample
->main = runDefault
+>main = dyreExample defaultConfig
 
 This will set up a basic project which looks for a configuration file
 in ~/.dyreExample, and can recompile and launch it if necessary. The
 only major flaw in this snippet is the use of the 'getCurrentDirectory'
 function for the binary directory.
 -}
-module Config.Dyre ( runWith, Params(..) ) where
+module Config.Dyre ( wrapMain, Params(..) ) where
 
 import System.IO          ( openFile, IOMode(..), hClose )
 import System.Info        ( os, arch )
@@ -69,18 +69,10 @@ import Config.Dyre.Exec    ( customExec )
 import Config.Dyre.Launch  ( launchMain )
 
 
--- | This function returns a tuple of functions: (runDefault, runCustom)
---   These two functions are the entry points of the program. 'runDefault'
---   is where control enters Dyre from the main executable, and 'runCustom'
---   is called by customized executables.
-runWith :: Params cfgType -> (IO (), cfgType -> IO ())
-runWith params@Params{defaultConf = cfg} =
-    ( wrapMain params cfg, wrapMain params )
-
--- | By the time wrapMain gets called, we have all the data we need. Regardless
---   of whether it's the default of custom one, we have a config. We have all
---   the parameters we'll need, and we have an 'orig' argument that tells us
---   whether we're in the original or the custom executable.
+-- | 'wrapMain' is how Dyre recieves control of the program. It is expected
+--   that it will be partially applied with its parameters to yield a "main"
+--   entry point, which will then be called by the 'main' function, as well
+--   as by any custom configurations.
 wrapMain :: Params cfgType -> cfgType -> IO ()
 wrapMain params@Params{realMain = realMain, projectName = pName} cfg = do
     args <- getArgs
