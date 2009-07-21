@@ -61,11 +61,15 @@ import Control.Exception  ( bracket )
 import System.Environment ( getArgs )
 import System.Directory   ( getModificationTime, doesFileExist,
                             getCurrentDirectory )
-
 import Config.Dyre.Params  ( Params(..) )
 import Config.Dyre.Compile ( customCompile )
 import Config.Dyre.Exec    ( customExec )
 import Config.Dyre.Launch  ( launchMain )
+
+import Data.Maybe ( fromMaybe )
+
+import Data.XDG.BaseDir    ( getUserCacheDir, getUserConfigDir )
+import System.Environment.Executable ( getExecutablePath )
 
 
 -- | 'wrapMain' is how Dyre recieves control of the program. It is expected
@@ -75,37 +79,40 @@ import Config.Dyre.Launch  ( launchMain )
 wrapMain :: Params cfgType -> cfgType -> IO ()
 wrapMain params@Params{realMain = realMain, projectName = pName} cfg = do
     args <- getArgs
-    let orig = not $ "--dyre-custom-child" `elem` args
     let debug = "--dyre-debug" `elem` args
-    let cwd = getCurrentDirectory
 
-    -- Get all three important paths
-    cwd <- getCurrentDirectory
-    bPath <- if not debug then binDir params    else return cwd
-    tPath <- if not debug then tmpDir params    else return $ cwd </> "tmp"
-    cPath <- if not debug then configDir params else return cwd
-    -- Calculate the names of the important files
-    let binFile = bPath </> pName
-    let tmpFile = tPath </> pName ++ "-" ++ os ++ "-" ++ arch
-    let cfgFile = cPath </> pName ++ ".hs"
+    -- Get directories for storing stuff in
+    cacheDir  <- if debug
+                    then fmap (</> "cache") $ getCurrentDirectory
+                    else fromMaybe (getUserCacheDir pName) (tmpDir params)
+    configDir <- if debug
+                    then getCurrentDirectory
+                    else fromMaybe (getUserConfigDir pName) (configDir params)
+
+    -- These are the three important files
+    thisBinary <- getExecutablePath
+    let tempBinary = cacheDir </> pName ++ "-" ++ os ++ "-" ++ arch
+    let configFile = configDir </> pName ++ ".hs"
+
     -- Check their modification times
-    binT <- maybeModTime binFile
-    tmpT <- maybeModTime tmpFile
-    cfgT <- maybeModTime cfgFile
+    thisTime <- maybeModTime thisBinary
+    tempTime <- maybeModTime tempBinary
+    confTime <- maybeModTime configFile
 
     -- If there's a config file, and the temp binary is older than something
-    -- else, then we should recompile.
-    errors <- if (cfgT /= Nothing) && or [ tmpT < cfgT
-                                         , tmpT < binT
-                                         , "--force-reconf" `elem`args ]
-                 then customCompile params cfgFile tmpFile tPath
+    -- else, or we were specially told to recompile, then we should recompile.
+    errors <- if and [ confTime /= Nothing
+                     , or [ tempTime < confTime
+                          , tempTime < thisTime
+                          , "--force-reconf" `elem` args ] ]
+                 then customCompile params configFile tempBinary cacheDir
                  else return Nothing
 
     -- If there's a custom binary and we're not it, run it. Otherwise
     -- just launch the main function.
-    customExists <- doesFileExist tmpFile
-    if customExists && orig
-       then customExec params tmpFile
+    customExists <- doesFileExist tempBinary
+    if customExists && (thisBinary /= tempBinary)
+       then customExec params tempBinary
        else launchMain params errors cfg
 
 -- | Check if a file exists. If it exists, return Just the modification

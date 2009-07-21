@@ -30,7 +30,8 @@ library
                    Config.Dyre.Exec,
                    Config.Dyre.Launch
   build-depends:   base >= 4 && < 5, process, unix,
-                   directory, filepath, ghc-paths
+                   directory, filepath, ghc-paths,
+                   executable-path, xdg-basedir
 
 source-repository head
   type:      git

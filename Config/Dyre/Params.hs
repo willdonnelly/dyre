@@ -10,15 +10,11 @@ data Params cfgType = Params
     { projectName  :: String
     -- ^ The name of the project. This needs to also be the name of
     --   the executable, and the name of the configuration file.
-    , configDir    :: IO FilePath
+    , configDir    :: Maybe (IO FilePath)
     -- ^ The directory to look for a configuration file in.
-    , tmpDir       :: IO FilePath
+    , tmpDir       :: Maybe (IO FilePath)
     -- ^ The directory to store build files in, including the final
     --   generated executable.
-    , binDir       :: IO FilePath
-    -- ^ The directory that the 'official' binary will reside in.
-    --   This will usually be the same as the 'getBinDir' function
-    --   from the 'Paths_<project>' module that Cabal provides.
     , confError    :: String -> cfgType -> cfgType
     -- ^ This function updates the config with an error message if
     --   the new config file is invalid. It is the responsibility

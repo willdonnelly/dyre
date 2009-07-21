@@ -27,5 +27,4 @@ launchMain params errors cfg = do
          Just er -> newArgs (realMain params $ (confError params) er cfg)
 
 excludeArgs args = args \\ [ "--force-reconf"
-                           , "--dyre-debug"
-                           , "--dyre-custom-child" ]
+                           , "--dyre-debug" ]
