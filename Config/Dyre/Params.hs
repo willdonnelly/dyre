@@ -19,18 +19,14 @@ data Params cfgType = Params
     -- ^ The directory that the 'official' binary will reside in.
     --   This will usually be the same as the 'getBinDir' function
     --   from the 'Paths_<project>' module that Cabal provides.
-    , defaultConf  :: cfgType
-    -- ^ This is the default configuration which will be used when
-    --   the user has not created a custom one.
     , confError    :: String -> cfgType -> cfgType
     -- ^ This function updates the config with an error message if
     --   the new config file is invalid. It is the responsibility
     --   of the program to display this information somehow.
     , realMain     :: cfgType -> IO ()
-    -- ^ The main function of the program. It is provided with a
-    --   configuration. When the program is unconfigured, it is
-    --   given the value of 'defaultConf', otherwise it is given
-    --   the modified configuration.
+    -- ^ The main function of the program. When Dyre has completed
+    --   all of its recompilation, it passes the configuration data
+    --   to this function and gets out of the way.
     , hidePackages :: [String]
     -- ^ Packages that need to be hidden during compilation
     , ghcOpts      :: [String]

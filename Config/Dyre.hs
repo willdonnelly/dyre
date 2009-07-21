@@ -8,7 +8,7 @@ configuration data.
 For example, a basic program might use Dyre in the following way:
 
 >-- DyreExample.hs --
->module DyreExample ( runDefault, dyreExample, Config(..), defaultConf ) where
+>module DyreExample ( dyreExample, Config(..), defaultConf ) where
 >
 >import qualified Config.Dyre as Dyre
 >import System
@@ -36,7 +36,6 @@ For example, a basic program might use Dyre in the following way:
 >    --   binary. In a full project, the Cabal-generated module
 >    --   'Paths_<project>' provides a 'getBinDir' function that
 >    --   should be used.
->    , Dyre.defaultConf  = defaultConf
 >    , Dyre.confError    = confError
 >    , Dyre.realMain     = realMain
 >    , Dyre.hidePackages = []
