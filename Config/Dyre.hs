@@ -75,15 +75,16 @@ import Config.Dyre.Launch  ( launchMain )
 --   is called by customized executables.
 runWith :: Params cfgType -> (IO (), cfgType -> IO ())
 runWith params@Params{defaultConf = cfg} =
-    ( wrapMain True params cfg, wrapMain False params )
+    ( wrapMain params cfg, wrapMain params )
 
 -- | By the time wrapMain gets called, we have all the data we need. Regardless
 --   of whether it's the default of custom one, we have a config. We have all
 --   the parameters we'll need, and we have an 'orig' argument that tells us
 --   whether we're in the original or the custom executable.
-wrapMain :: Bool -> Params cfgType -> cfgType -> IO ()
-wrapMain orig params@Params{realMain = realMain, projectName = pName} cfg = do
+wrapMain :: Params cfgType -> cfgType -> IO ()
+wrapMain params@Params{realMain = realMain, projectName = pName} cfg = do
     args <- getArgs
+    let orig = not $ "--dyre-custom-child" `elem` args
     let debug = "--dyre-debug" `elem` args
     let cwd = getCurrentDirectory
 

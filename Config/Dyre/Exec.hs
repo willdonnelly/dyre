@@ -22,4 +22,5 @@ customExec :: Params cfgType -> FilePath -> IO ()
 customExec params@Params{statusOut = output} tmpFile = do
     output $ "Launching custom binary '" ++ tmpFile ++ "'\n"
     args <- getArgs
-    executeFile tmpFile False (args \\ ["--force-reconf"]) Nothing
+    executeFile tmpFile False (newArgs args) Nothing
+  where newArgs args = "--dyre-custom-child":(args \\ ["--force-reconf"])
