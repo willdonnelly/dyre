@@ -17,20 +17,14 @@ For example, a basic program might use Dyre in the following way:
 >module DyreExample ( dyreExample, Config(..), defaultConf ) where
 >
 >import qualified Config.Dyre as Dyre
->import System
->import System.IO
->import System.Directory
->import System.FilePath
 >
->data Config = Config { errorMsg :: Maybe String, message  :: String }
->defaultConf = Config { errorMsg = Nothing, message  = "Hello, world!" }
->confError cfg msg = cfg {errorMsg = Just msg}
+>data Config = Config { message :: String }
+>defaultConf = Config "Hello, world!"
+>confError (Config message) error = Config $ "Error:" ++ error ++ "\n" ++ message
 >
->realMain (Config err msg) = do
->    putStrLn "Entered program"
->    case err of
->         Just eMsg -> putStrLn $ "Error:   " ++ eMsg
->         Nothing   -> putStrLn $ "Message: " ++ msg
+>realMain (Config message) = do
+>    putStrLn "Entered Main Function"
+>    putStrLn message
 >
 >dyreExample = Dyre.wrapMain Dyre.defaultParams
 >    { Dyre.projectName  = "dyreExample"
