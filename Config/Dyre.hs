@@ -1,9 +1,15 @@
 {- |
 The main module for Dyre. The items that it exports are all that
 should ever be needed by a program which uses Dyre. The 'Params'
-structure is used for all configuration data, and the 'runWith'
-function is used to obtain the program entry points for the given
+structure is used for all configuration data, and the 'wrapMain'
+function is used to obtain the program entry point for the given
 configuration data.
+
+The 'defaultParams' record contains suitable default values for
+all configuration items except for 'projectName', 'showError', and
+'realMain'. By defining those three items using record substitution,
+a working program can be integrated with Dyre in only a few lines of
+extra code.
 
 For example, a basic program might use Dyre in the following way:
 
@@ -18,7 +24,7 @@ For example, a basic program might use Dyre in the following way:
 >
 >data Config = Config { errorMsg :: Maybe String, message  :: String }
 >defaultConf = Config { errorMsg = Nothing, message  = "Hello, world!" }
->confError msg cfg = cfg {errorMsg = Just msg}
+>confError cfg msg = cfg {errorMsg = Just msg}
 >
 >realMain (Config err msg) = do
 >    putStrLn "Entered program"
@@ -26,54 +32,46 @@ For example, a basic program might use Dyre in the following way:
 >         Just eMsg -> putStrLn $ "Error:   " ++ eMsg
 >         Nothing   -> putStrLn $ "Message: " ++ msg
 >
->dyreExample = Dyre.wrapMain Dyre.Params
+>dyreExample = Dyre.wrapMain Dyre.defaultParams
 >    { Dyre.projectName  = "dyreExample"
->    , Dyre.configDir    = getAppUserDataDirectory "dyreExample"
->    , Dyre.tmpDir       = do configDir <- getAppUserDataDirectory "dyreExample"
->                             return $ configDir </> "tmp"
->    , Dyre.binDir       = getCurrentDirectory
->    -- ^ This only works when the current directory holds the
->    --   binary. In a full project, the Cabal-generated module
->    --   'Paths_<project>' provides a 'getBinDir' function that
->    --   should be used.
->    , Dyre.confError    = confError
+>    , Dyre.showError    = confError
 >    , Dyre.realMain     = realMain
->    , Dyre.hidePackages = []
->    , Dyre.ghcOpts      = []
->    , Dyre.statusOut    = hPutStrLn stderr
 >    }
-
+>
 >-- Main.hs --
 >import DyreExample
->main = dyreExample defaultConfig
+>main = dyreExample defaultConf
 
-This will set up a basic project which looks for a configuration file
-in ~/.dyreExample, and can recompile and launch it if necessary. The
-only major flaw in this snippet is the use of the 'getCurrentDirectory'
-function for the binary directory.
+This will set up a basic project named 'dyreExample', which either prints
+a special message, or reports a compilation error. On Posix systems, it
+will look for the configuration file according to XDG_CACHE_HOME, and on
+Windows it will look under "%USERPROFILE%\Local Settings".
+
+These paths can be overridden by giving a custom value to the 'configDir'
+and 'cacheDir' elements, but it is recommended that you not bother.
 -}
+
 module Config.Dyre
     ( wrapMain
     , Params(..)
     , defaultParams
     ) where
 
+import Data.Maybe         ( fromMaybe )
 import System.IO          ( openFile, IOMode(..), hClose, hPutStrLn, stderr )
 import System.Info        ( os, arch )
 import System.FilePath    ( (</>) )
 import Control.Exception  ( bracket )
 import System.Environment ( getArgs )
-import System.Directory   ( getModificationTime, doesFileExist,
-                            getCurrentDirectory )
+import System.Directory   ( getModificationTime, doesFileExist, getCurrentDirectory )
+
+import Data.XDG.BaseDir              ( getUserCacheDir, getUserConfigDir )
+import System.Environment.Executable ( getExecutablePath )
+
 import Config.Dyre.Params  ( Params(..) )
 import Config.Dyre.Compile ( customCompile )
 import Config.Dyre.Exec    ( customExec )
 import Config.Dyre.Launch  ( launchMain )
-
-import Data.Maybe ( fromMaybe )
-
-import Data.XDG.BaseDir    ( getUserCacheDir, getUserConfigDir )
-import System.Environment.Executable ( getExecutablePath )
 
 defaultParams = Params
     { projectName  = undefined
@@ -134,6 +132,5 @@ wrapMain params@Params{projectName = pName} cfg = do
 maybeModTime path = do
     fileExists <- doesFileExist path
     if fileExists
-       then do modTime <- getModificationTime path
-               return . Just $ modTime
+       then fmap Just $ getModificationTime path
        else return Nothing
