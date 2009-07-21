@@ -52,9 +52,13 @@ in ~/.dyreExample, and can recompile and launch it if necessary. The
 only major flaw in this snippet is the use of the 'getCurrentDirectory'
 function for the binary directory.
 -}
-module Config.Dyre ( wrapMain, Params(..) ) where
+module Config.Dyre
+    ( wrapMain
+    , Params(..)
+    , defaultParams
+    ) where
 
-import System.IO          ( openFile, IOMode(..), hClose )
+import System.IO          ( openFile, IOMode(..), hClose, hPutStrLn, stderr )
 import System.Info        ( os, arch )
 import System.FilePath    ( (</>) )
 import Control.Exception  ( bracket )
@@ -71,20 +75,30 @@ import Data.Maybe ( fromMaybe )
 import Data.XDG.BaseDir    ( getUserCacheDir, getUserConfigDir )
 import System.Environment.Executable ( getExecutablePath )
 
+defaultParams = Params
+    { projectName  = undefined
+    , configDir    = Nothing
+    , cacheDir     = Nothing
+    , realMain     = undefined
+    , showError    = undefined
+    , hidePackages = []
+    , ghcOpts      = []
+    , statusOut    = hPutStrLn stderr
+    }
 
 -- | 'wrapMain' is how Dyre recieves control of the program. It is expected
 --   that it will be partially applied with its parameters to yield a "main"
 --   entry point, which will then be called by the 'main' function, as well
 --   as by any custom configurations.
 wrapMain :: Params cfgType -> cfgType -> IO ()
-wrapMain params@Params{realMain = realMain, projectName = pName} cfg = do
+wrapMain params@Params{projectName = pName} cfg = do
     args <- getArgs
     let debug = "--dyre-debug" `elem` args
 
     -- Get directories for storing stuff in
     cacheDir  <- if debug
                     then fmap (</> "cache") $ getCurrentDirectory
-                    else fromMaybe (getUserCacheDir pName) (tmpDir params)
+                    else fromMaybe (getUserCacheDir pName) (cacheDir params)
     configDir <- if debug
                     then getCurrentDirectory
                     else fromMaybe (getUserConfigDir pName) (configDir params)

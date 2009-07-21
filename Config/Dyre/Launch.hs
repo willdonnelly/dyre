@@ -24,7 +24,7 @@ launchMain params errors cfg = do
     let newArgs = withArgs . excludeArgs $ args
     case errors of
          Nothing -> newArgs (realMain params $ cfg)
-         Just er -> newArgs (realMain params $ (confError params) er cfg)
+         Just er -> newArgs (realMain params $ (showError params) cfg er)
 
 excludeArgs args = args \\ [ "--force-reconf"
                            , "--dyre-debug" ]
