@@ -26,5 +26,8 @@ launchMain params errors cfg = do
          Nothing -> newArgs (realMain params $ cfg)
          Just er -> newArgs (realMain params $ (showError params) cfg er)
 
-excludeArgs args = args \\ [ "--force-reconf"
-                           , "--dyre-debug" ]
+excludeArgs args = filterOut args [ "--force-reconf"
+                                  , "--dyre-debug"
+                                  , "--dyre-persist-state"
+                                  , "--dyre-master-binary" ]
+  where filterOut xs fs = foldl (\xs f -> filter (not . isPrefixOf f) xs) xs fs

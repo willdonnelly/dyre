@@ -48,6 +48,7 @@ and 'cacheDir' elements, but it is recommended that you not bother.
 module Config.Dyre ( wrapMain, Params(..), defaultParams ) where
 
 import Data.Maybe         ( fromMaybe )
+import Data.List          ( isPrefixOf, (\\) )
 import System.IO          ( openFile, IOMode(..), hClose, hPutStrLn, stderr )
 import System.Info        ( os, arch )
 import System.FilePath    ( (</>) )
@@ -57,6 +58,8 @@ import System.Directory   ( getModificationTime, doesFileExist, getCurrentDirect
 
 import System.Environment.XDG.BaseDir ( getUserCacheDir, getUserConfigDir )
 import System.Environment.Executable  ( getExecutablePath )
+
+import System.IO.Storage   ( putValue, clearAll )
 
 import Config.Dyre.Params  ( Params(..) )
 import Config.Dyre.Compile ( customCompile )
@@ -81,7 +84,17 @@ defaultParams = Params
 wrapMain :: Params cfgType -> cfgType -> IO ()
 wrapMain params@Params{projectName = pName} cfg = do
     args <- getArgs
+    thisBinary <- getExecutablePath
     let debug = "--dyre-debug" `elem` args
+
+    clearAll "dyre"
+    let stateArg = filter (isPrefixOf "--dyre-state-persist=") args
+    if not $ null $ stateArg then storeState (head stateArg) else return ()
+    let masterArg = filter (isPrefixOf "--dyre-master-binary=") args
+    if not $ null $ masterArg
+       then storeMaster (head masterArg)
+       else storeMaster ("--dyre-master-binary=" ++ thisBinary)
+    putValue "dyre" "programName" pName
 
     -- Get directories for storing stuff in
     cacheDir  <- if debug
@@ -92,7 +105,6 @@ wrapMain params@Params{projectName = pName} cfg = do
                     else fromMaybe (getUserConfigDir pName) (configDir params)
 
     -- These are the three important files
-    thisBinary <- getExecutablePath
     let tempBinary = cacheDir </> pName ++ "-" ++ os ++ "-" ++ arch
     let configFile = configDir </> pName ++ ".hs"
 
@@ -116,6 +128,16 @@ wrapMain params@Params{projectName = pName} cfg = do
     if customExists && (thisBinary /= tempBinary)
        then customExec params tempBinary
        else launchMain params errors cfg
+
+storeState :: String -> IO ()
+storeState stateArg = do
+    stateData <- readFile $ stateArg \\ "--dyre-state-persist="
+    putValue "dyre" "persistState" stateData
+
+storeMaster :: String -> IO ()
+storeMaster masterArg = do
+    putValue "dyre" "masterBinary" $ masterArg \\ "--dyre-master-binary="
+
 
 -- | Check if a file exists. If it exists, return Just the modification
 --   time. If it doesn't exist, return Nothing.
