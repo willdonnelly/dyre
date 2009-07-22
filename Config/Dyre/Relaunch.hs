@@ -6,9 +6,11 @@ module Config.Dyre.Relaunch
 
 import System.IO            ( writeFile )
 import System.Directory     ( getTemporaryDirectory )
-import System.Environment   ( getProgname )
+import System.Environment   ( getProgName )
 import System.Posix.Process ( executeFile, getProcessID )
 import System.IO.Storage    ( getValue, clearAll )
+import Data.Maybe           ( fromJust )
+import System.FilePath      ( (</>) )
 
 relaunchMaster :: [String] -> IO ()
 relaunchMaster args = do
@@ -24,7 +26,7 @@ relaunchWithState stStr args = do
     progName <- getProgName
     procID   <- getProcessID
     tempDir  <- getTemporaryDirectory
-    let statePath = tempDir </> progName ++ "-" procId ++ ".state"
+    let statePath = tempDir </> progName ++ "-" ++ (show procID) ++ ".state"
     writeFile statePath stStr
     relaunchMaster $ ("--dyre-state-persist=" ++ statePath):args
 

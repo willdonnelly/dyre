@@ -28,7 +28,8 @@ library
                    Config.Dyre.Params,
                    Config.Dyre.Compile,
                    Config.Dyre.Exec,
-                   Config.Dyre.Launch
+                   Config.Dyre.Launch,
+                   Config.Dyre.Relaunch
   build-depends:   base >= 4 && < 5, process, unix,
                    directory, filepath, ghc-paths,
                    executable-path, xdg-basedir,

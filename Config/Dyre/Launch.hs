@@ -28,6 +28,6 @@ launchMain params errors cfg = do
 
 excludeArgs args = filterOut args [ "--force-reconf"
                                   , "--dyre-debug"
-                                  , "--dyre-persist-state"
+                                  , "--dyre-state-persist"
                                   , "--dyre-master-binary" ]
   where filterOut xs fs = foldl (\xs f -> filter (not . isPrefixOf f) xs) xs fs
