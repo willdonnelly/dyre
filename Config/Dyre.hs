@@ -131,6 +131,7 @@ wrapMain params@Params{projectName = pName} cfg = do
 
 storeState :: String -> IO ()
 storeState stateArg = do
+    putStrLn $ "State file: " ++ stateArg
     stateData <- readFile $ stateArg \\ "--dyre-state-persist="
     putValue "dyre" "persistState" stateData
 
