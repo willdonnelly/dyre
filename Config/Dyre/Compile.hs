@@ -18,36 +18,41 @@ import System.Directory  ( getCurrentDirectory, createDirectoryIfMissing, doesFi
 import Control.Exception ( bracket )
 import GHC.Paths         ( ghc )
 
-import Config.Dyre.Params
+import Config.Dyre.Util   ( getPaths )
+import Config.Dyre.Params ( Params(..) )
 
 -- | Attempts to compile the configuration file. Errors will be stored in
 --   the '<tmpPath>/errors.log' file. Will return a boolean indicating if
 --   there is a custom binary to execute.
-customCompile :: Params cfgType -> FilePath -> FilePath
-              -> FilePath -> IO (Maybe String)
-customCompile params@Params{statusOut = output}
-              cfgFile tmpFile tmpPath = do
-    -- Prepare to compile. Create the temp directory and open the error file.
-    output $ "Configuration '" ++ cfgFile ++  "' changed. Recompiling."
-    createDirectoryIfMissing True tmpPath
-    let errFile = tmpPath </> "errors.log"
+customCompile :: Params cfgType -> IO (Maybe String)
+customCompile params@Params{statusOut = output} = do
+    -- Get important paths
+    (thisBinary, tempBinary, configFile, cacheDir) <- getPaths params
+    output $ "Configuration '" ++ configFile ++  "' changed. Recompiling."
+
+    -- Open the error file and compile
+    createDirectoryIfMissing True cacheDir
+    let errFile = cacheDir </> "errors.log"
     result <- bracket (openFile errFile WriteMode) hClose $ \errHandle -> do
-        ghcFlags <- makeFlags params cfgFile tmpFile
-        -- We get the GHC path from the one used to compile the main binary
-        -- This could be improved.
-        ghcProc <- runProcess ghc ghcFlags (Just tmpPath) Nothing
+        ghcOpts <- makeFlags params configFile tempBinary
+        ghcProc <- runProcess ghc ghcOpts (Just cacheDir) Nothing
                               Nothing Nothing (Just errHandle)
         waitForProcess ghcProc
+
+    -- Display a helpful little status message
     if result /= ExitSuccess
        then output $ "Error occurred while loading configuration file."
        else output $ "Program reconfiguration successful."
+
+    -- If the error file exists and actually has some contents, return
+    -- 'Just' the error string. Otherwise return 'Nothing'.
     errorsExist <- doesFileExist errFile
-    if errorsExist
-       then do errors <- readFile errFile
-               if errors /= ""
-                  then return . Just $ errors
-                  else return Nothing
-       else return Nothing
+    if not errorsExist
+       then return Nothing
+       else do errors <- readFile errFile
+               if errors == ""
+                  then return Nothing
+                  else return . Just $ errors
 
 -- | Assemble the arguments to GHC so everything compiles right.
 makeFlags :: Params cfgType -> FilePath -> FilePath -> IO [String]
