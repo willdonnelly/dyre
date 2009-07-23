@@ -9,25 +9,33 @@ executing the custom binary on different platforms.
 -}
 module Config.Dyre.Exec ( customExec ) where
 
-import Config.Dyre.Params
-
-import System.Directory     ( doesFileExist )
-import System.Environment   ( getArgs )
-import System.Posix.Process ( executeFile )
-import Data.List            ( (\\) )
-import Data.Maybe           ( fromJust )
-
-import System.IO.Storage    ( getValue, clearAll )
+import System.Posix.Process          ( executeFile )
+import System.IO.Storage             ( getValueDefault, getValue, clearAll )
+import System.Environment.Executable ( getExecutablePath )
+import Config.Dyre.Util              ( strippedArgs )
+import Config.Dyre.Params            ( Params(..) )
 
 -- | Called when execution needs to be transferred over to
 --   the custom-compiled binary.
 customExec :: Params cfgType -> FilePath -> IO ()
-customExec params@Params{statusOut = output} tmpFile = do
-    masterBinary <- fmap fromJust $ getValue "dyre" "masterBinary"
+customExec params@Params{statusOut = output} tempBinary = do
+    -- Status output
+    output $ "Launching custom binary '" ++ tempBinary ++ "'\n"
+
+    -- Calculate some arguments
+    binaryPath <- getExecutablePath
+    masterPath <- getValueDefault binaryPath "dyre" "masterBinary"
+    stateFile  <- getValue "dyre" "persistState"
+    debugMode  <- getValueDefault False "dyre" "debugMode"
+    argsA      <- strippedArgs
+    let argsB = if debugMode then ("--dyre-debug":argsA) else argsA
+    let argsC = case stateFile of
+                     Nothing -> argsB
+                     Just sf -> ("--dyre-state-persist=" ++ sf):argsB
+    let argsD = ("--dyre-master-binary=" ++ masterPath):argsC
+
+    -- Clear the data store
     clearAll "dyre"
 
-    output $ "Launching custom binary '" ++ tmpFile ++ "'\n"
-    args <- getArgs
-    executeFile tmpFile False (newArgs masterBinary args) Nothing
-  where newArgs mb args = plusMaster \\ ["--force-reconf"]
-          where plusMaster = ("--dyre-master-binary=" ++ mb):args
+    -- And execute with the new arguments
+    executeFile tempBinary False argsD Nothing

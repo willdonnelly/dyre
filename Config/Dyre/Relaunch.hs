@@ -5,45 +5,65 @@ module Config.Dyre.Relaunch
   , restoreState
   ) where
 
-import System.IO            ( writeFile )
+import Data.Maybe           ( fromMaybe )
+import System.IO            ( writeFile, readFile )
+import System.IO.Error      ( try )
+import System.FilePath      ( (</>) )
 import System.Directory     ( getTemporaryDirectory )
+import System.IO.Storage    ( getValue, getValueDefault, clearAll )
 import System.Environment   ( getProgName, getArgs )
 import System.Posix.Process ( executeFile, getProcessID )
-import System.IO.Storage    ( getValue, clearAll )
-import Data.Maybe           ( fromJust, fromMaybe )
-import System.FilePath      ( (</>) )
-import System.IO.Error      ( try )
 
 relaunchMaster :: [String] -> IO ()
-relaunchMaster args = do
+relaunchMaster argsA = do
+    -- Add debug flag to args if necessary
+    debugMode  <- getValueDefault False "dyre" "debugMode"
+    let argsB = if debugMode then ("--dyre-debug":argsA) else argsA
+
+    -- Get the path or name of the master program
+    masterName <- getProgName
     masterPath <- getValue "dyre" "masterBinary"
-    masterName <- getValue "dyre" "programName"
+
+    -- Clear the data store
     clearAll "dyre"
+
+    -- If we have a path, run it, otherwise hope the name works
     case masterPath of
-         Nothing -> executeFile (fromJust masterName) True args Nothing
-         Just p  -> executeFile p False args Nothing
+         Nothing -> executeFile masterName True argsB Nothing
+         Just mp -> executeFile mp False argsB Nothing
 
 relaunchWithState :: Show a => a -> Maybe [String] -> IO ()
-relaunchWithState state args = do
+relaunchWithState state newArgs = do
+    -- Calculate the path to the state file
     progName <- getProgName
     procID   <- getProcessID
     tempDir  <- getTemporaryDirectory
     let statePath = tempDir </> progName ++ "-" ++ (show procID) ++ ".state"
+
+    -- Write the state to the file
     writeFile statePath (show state)
-    oldArgs <- getArgs
-    relaunchMaster $ ("--dyre-state-persist=" ++ statePath):(fromMaybe oldArgs args)
+
+    -- Calculate arguments
+    argsA <- getArgs
+    let argsB = fromMaybe argsA newArgs
+    let argsC = ("--dyre-state-persist=" ++ statePath):argsB
+
+    -- Relaunch
+    relaunchMaster argsC
 
 maybeRestoreState :: Read a => IO (Maybe a)
 maybeRestoreState = do
-    stringData <- getValue "dyre" "persistState"
-    case stringData of
+    statePath <- getValue "dyre" "persistState"
+    case statePath of
          Nothing -> return Nothing
-         Just st -> do tryValue <- try $ readIO st
-                       case tryValue of
-                            Left  _ -> return $ Nothing
-                            Right v -> return $ Just v
+         Just sp -> do stateData <- readFile sp
+                       errorToMaybe $ readIO stateData
+
+errorToMaybe :: IO a -> IO (Maybe a)
+errorToMaybe a = do tryValue <- try a
+                    case tryValue of
+                         Left  _ -> return $ Nothing
+                         Right v -> return $ Just v
 
 restoreState :: Read a => a -> IO a
-restoreState d = do
-    maybeState <- maybeRestoreState
-    return . fromMaybe d $ maybeState
+restoreState d = fmap (fromMaybe d) maybeRestoreState

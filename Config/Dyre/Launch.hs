@@ -11,27 +11,20 @@ options that only Dyre needs to see.
 -}
 module Config.Dyre.Launch ( launchMain ) where
 
-import Config.Dyre.Params ( Params(..) )
-import Data.List          ( isPrefixOf, (\\) )
-import System.Environment ( getArgs, withArgs )
+import System.Environment ( withArgs )
 import System.IO.Storage  ( clearAll )
 import Control.Exception  ( finally )
+import Config.Dyre.Params ( Params(..) )
+import Config.Dyre.Util   ( strippedArgs )
 
 -- | Enter the main function, possibly reporting errors and modifying
 --   the command-line arguments. This is where control finally gets
 --   handed off to the 'realMain' function.
 launchMain :: Params cfgType -> Maybe String -> cfgType -> IO ()
 launchMain params errors cfg = do
-    args <- getArgs
-    let newArgs = withArgs . excludeArgs $ args
+    args <- strippedArgs
     let configData = case errors of
                           Nothing -> cfg
                           Just er -> (showError params) cfg er
-    finally (newArgs $ realMain params $ cfg)
+    finally (withArgs args $ realMain params $ cfg)
             (clearAll "dyre")
-
-excludeArgs args = filterOut args [ "--force-reconf"
-                                  , "--dyre-debug"
-                                  , "--dyre-state-persist"
-                                  , "--dyre-master-binary" ]
-  where filterOut xs fs = foldl (\xs f -> filter (not . isPrefixOf f) xs) xs fs

@@ -1,14 +1,17 @@
 module Config.Dyre.Util where
 
-import System.Environment ( getArgs )
-import Data.List ( isPrefixOf, (\\) )
-import System.IO.Storage ( putValue )
-import Config.Dyre.Params ( Params(..) )
+import Data.List                      ( isPrefixOf, (\\) )
+import System.Info                    ( os, arch )
+import System.FilePath                ( (</>) )
+import System.Directory               ( getCurrentDirectory
+                                      , doesFileExist
+                                      , getModificationTime )
+import System.IO.Storage              ( putValue, getValueDefault )
+import System.Environment             ( getArgs )
 import System.Environment.XDG.BaseDir ( getUserCacheDir, getUserConfigDir )
 import System.Environment.Executable  ( getExecutablePath )
-import System.Directory ( getCurrentDirectory, doesFileExist, getModificationTime )
-import System.FilePath ( (</>) )
-import System.Info ( os, arch )
+
+import Config.Dyre.Params             ( Params(..) )
 
 -- | Extract the value which follows a command line flag, and store
 --   it for future reference.
@@ -20,19 +23,23 @@ storeFlagValue flagString storeName = do
        then return ()
        else putValue "dyre" storeName $ (head flagArg) \\ flagString
 
+storeFlagState :: String -> String -> IO ()
+storeFlagState flagString storeName = do
+    args <- getArgs
+    putValue "dyre" storeName $ flagString `elem` args
+
 -- | Calculate the paths to the three important files and the
 --   cache directory.
 getPaths :: Params c -> IO (FilePath, FilePath, FilePath, FilePath)
 getPaths params@Params{projectName = pName} = do
-    args <- getArgs
     thisBinary <- getExecutablePath
-    let debug = "--dyre-debug" `elem` args
+    debugMode  <- getValueDefault False "dyre" "debugMode"
     cwd <- getCurrentDirectory
-    cacheDir  <- case (debug, cacheDir params) of
+    cacheDir  <- case (debugMode, cacheDir params) of
                       (True,  _      ) -> return $ cwd </> "cache"
                       (False, Nothing) -> getUserCacheDir pName
                       (False, Just cd) -> cd
-    configDir <- case (debug, configDir params) of
+    configDir <- case (debugMode, configDir params) of
                       (True,  _      ) -> return $ cwd
                       (False, Nothing) -> getUserConfigDir pName
                       (False, Just cd) -> cd
@@ -47,3 +54,13 @@ maybeModTime path = do
     if fileExists
        then fmap Just $ getModificationTime path
        else return Nothing
+
+strippedArgs :: IO [String]
+strippedArgs = do
+    args <- getArgs
+    return $ filterOut args [ "--force-reconf"
+                            , "--dyre-debug"
+                            , "--dyre-state-persist"
+                            , "--dyre-master-binary"
+                            ]
+  where filterOut xs fs = foldl (\xs f -> filter (not . isPrefixOf f) xs) xs fs

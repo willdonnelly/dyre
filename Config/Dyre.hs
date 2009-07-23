@@ -50,13 +50,13 @@ module Config.Dyre ( wrapMain, Params(..), defaultParams ) where
 import System.IO           ( hPutStrLn, stderr )
 import System.Environment  ( getArgs )
 import System.Directory    ( doesFileExist )
-import System.IO.Storage   ( clearAll )
+import System.IO.Storage   ( clearAll, getValueDefault )
 
 import Config.Dyre.Params  ( Params(..) )
 import Config.Dyre.Compile ( customCompile )
 import Config.Dyre.Exec    ( customExec )
 import Config.Dyre.Launch  ( launchMain )
-import Config.Dyre.Util    ( storeFlagValue, getPaths, maybeModTime )
+import Config.Dyre.Util    ( storeFlagValue, storeFlagState, getPaths, maybeModTime )
 
 defaultParams = Params
     { projectName  = undefined
@@ -75,14 +75,15 @@ defaultParams = Params
 --   as by any custom configurations.
 wrapMain :: Params cfgType -> cfgType -> IO ()
 wrapMain params@Params{projectName = pName} cfg = do
-    -- Get the important paths
-    (thisBinary, tempBinary, configFile, cacheDir) <- getPaths params
-    args <- getArgs
-
     -- Store some data for later
     clearAll "dyre"
     storeFlagValue "--dyre-state-persist=" "persistState"
     storeFlagValue "--dyre-master-binary=" "masterBinary"
+    storeFlagState "--force-reconf"        "forceReconf"
+    storeFlagState "--dyre-debug"          "debugMode"
+
+    -- Get the important paths
+    (thisBinary, tempBinary, configFile, cacheDir) <- getPaths params
 
     -- Check their modification times
     thisTime <- maybeModTime thisBinary
@@ -92,9 +93,9 @@ wrapMain params@Params{projectName = pName} cfg = do
     -- If there's a config file, and the temp binary is older than something
     -- else, or we were specially told to recompile, then we should recompile.
     let confExists = confTime /= Nothing
-    errors <- if confExists && or [ tempTime < confTime
-                                  , tempTime < thisTime
-                                  , "--force-reconf" `elem` args ]
+    forceReconf <- getValueDefault False "dyre" "forceReconf"
+    errors <- if confExists &&
+                 (tempTime < confTime || tempTime < thisTime || forceReconf)
                  then customCompile params
                  else return Nothing
 
