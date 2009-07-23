@@ -9,7 +9,7 @@ import Data.Maybe           ( fromMaybe )
 import System.IO            ( writeFile, readFile )
 import System.IO.Error      ( try )
 import System.FilePath      ( (</>) )
-import System.Directory     ( getTemporaryDirectory )
+import System.Directory     ( getTemporaryDirectory, removeFile )
 import System.IO.Storage    ( getValue, getValueDefault, clearAll )
 import System.Environment   ( getProgName, getArgs )
 import System.Posix.Process ( executeFile, getProcessID )
@@ -57,6 +57,7 @@ maybeRestoreState = do
     case statePath of
          Nothing -> return Nothing
          Just sp -> do stateData <- readFile sp
+                       removeFile sp
                        errorToMaybe $ readIO stateData
 
 errorToMaybe :: IO a -> IO (Maybe a)
