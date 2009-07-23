@@ -15,6 +15,7 @@ import Config.Dyre.Params ( Params(..) )
 import Data.List          ( isPrefixOf, (\\) )
 import System.Environment ( getArgs, withArgs )
 import System.IO.Storage  ( clearAll )
+import Control.Exception  ( finally )
 
 -- | Enter the main function, possibly reporting errors and modifying
 --   the command-line arguments. This is where control finally gets
@@ -23,10 +24,11 @@ launchMain :: Params cfgType -> Maybe String -> cfgType -> IO ()
 launchMain params errors cfg = do
     args <- getArgs
     let newArgs = withArgs . excludeArgs $ args
-    case errors of
-         Nothing -> newArgs (realMain params $ cfg)
-         Just er -> newArgs (realMain params $ (showError params) cfg er)
-    clearAll "dyre"
+    let configData = case errors of
+                          Nothing -> cfg
+                          Just er -> (showError params) cfg er
+    finally (newArgs $ realMain params $ cfg)
+            (clearAll "dyre")
 
 excludeArgs args = filterOut args [ "--force-reconf"
                                   , "--dyre-debug"
