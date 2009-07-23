@@ -33,7 +33,6 @@ relaunchWithState state args = do
     oldArgs <- getArgs
     relaunchMaster $ ("--dyre-state-persist=" ++ statePath):(fromMaybe oldArgs args)
 
-
 maybeRestoreState :: Read a => IO (Maybe a)
 maybeRestoreState = do
     stringData <- getValue "dyre" "persistState"

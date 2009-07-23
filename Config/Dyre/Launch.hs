@@ -14,6 +14,7 @@ module Config.Dyre.Launch ( launchMain ) where
 import Config.Dyre.Params ( Params(..) )
 import Data.List          ( isPrefixOf, (\\) )
 import System.Environment ( getArgs, withArgs )
+import System.IO.Storage  ( clearAll )
 
 -- | Enter the main function, possibly reporting errors and modifying
 --   the command-line arguments. This is where control finally gets
@@ -25,6 +26,7 @@ launchMain params errors cfg = do
     case errors of
          Nothing -> newArgs (realMain params $ cfg)
          Just er -> newArgs (realMain params $ (showError params) cfg er)
+    clearAll "dyre"
 
 excludeArgs args = filterOut args [ "--force-reconf"
                                   , "--dyre-debug"

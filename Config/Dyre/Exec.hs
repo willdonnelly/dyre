@@ -24,6 +24,8 @@ import System.IO.Storage    ( getValue, clearAll )
 customExec :: Params cfgType -> FilePath -> IO ()
 customExec params@Params{statusOut = output} tmpFile = do
     masterBinary <- fmap fromJust $ getValue "dyre" "masterBinary"
+    clearAll "dyre"
+
     output $ "Launching custom binary '" ++ tmpFile ++ "'\n"
     args <- getArgs
     executeFile tmpFile False (newArgs masterBinary args) Nothing
