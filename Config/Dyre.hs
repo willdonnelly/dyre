@@ -83,30 +83,14 @@ defaultParams = Params
 --   as by any custom configurations.
 wrapMain :: Params cfgType -> cfgType -> IO ()
 wrapMain params@Params{projectName = pName} cfg = do
+    -- Get the important paths
+    (thisBinary, tempBinary, configFile, cacheDir) <- getPaths params
     args <- getArgs
-    thisBinary <- getExecutablePath
-    let debug = "--dyre-debug" `elem` args
 
+    -- Store some data for later
     clearAll "dyre"
-    let stateArg = filter (isPrefixOf "--dyre-state-persist=") args
-    if not $ null $ stateArg then storeState (head stateArg) else return ()
-    let masterArg = filter (isPrefixOf "--dyre-master-binary=") args
-    if not $ null $ masterArg
-       then storeMaster (head masterArg)
-       else storeMaster ("--dyre-master-binary=" ++ thisBinary)
-    putValue "dyre" "programName" pName
-
-    -- Get directories for storing stuff in
-    cacheDir  <- if debug
-                    then fmap (</> "cache") $ getCurrentDirectory
-                    else fromMaybe (getUserCacheDir pName) (cacheDir params)
-    configDir <- if debug
-                    then getCurrentDirectory
-                    else fromMaybe (getUserConfigDir pName) (configDir params)
-
-    -- These are the three important files
-    let tempBinary = cacheDir </> pName ++ "-" ++ os ++ "-" ++ arch
-    let configFile = configDir </> pName ++ ".hs"
+    storeFlagValue "--dyre-state-persist=" "persistState"
+    storeFlagValue "--dyre-master-binary=" "masterBinary"
 
     -- Check their modification times
     thisTime <- maybeModTime thisBinary
@@ -115,10 +99,10 @@ wrapMain params@Params{projectName = pName} cfg = do
 
     -- If there's a config file, and the temp binary is older than something
     -- else, or we were specially told to recompile, then we should recompile.
-    errors <- if and [ confTime /= Nothing
-                     , or [ tempTime < confTime
-                          , tempTime < thisTime
-                          , "--force-reconf" `elem` args ] ]
+    let confExists = isJust confTime
+    errors <- if confExists && or [ tempTime < confTime
+                                  , tempTime < thisTime
+                                  , "--force-reconf" `elem` args ] ]
                  then customCompile params configFile tempBinary cacheDir
                  else return Nothing
 
@@ -129,16 +113,35 @@ wrapMain params@Params{projectName = pName} cfg = do
        then customExec params tempBinary
        else launchMain params errors cfg
 
-storeState :: String -> IO ()
-storeState stateArg = do
-    putStrLn $ "State file: " ++ stateArg
-    stateData <- readFile $ stateArg \\ "--dyre-state-persist="
-    putValue "dyre" "persistState" stateData
+-- | Extract the value which follows a command line flag, and store
+--   it for future reference.
+storeFlagValue :: String -> String -> IO ()
+storeFlagValue flagString storeName = do
+    args <- getArgs
+    let flagArg = filter (isPrefixOf flagString) args
+    if null flagArg
+       then return ()
+       else putValue "dyre" storeName $ (head flagArg) \\ flagString
 
-storeMaster :: String -> IO ()
-storeMaster masterArg = do
-    putValue "dyre" "masterBinary" $ masterArg \\ "--dyre-master-binary="
-
+-- | Calculate the paths to the three important files and the
+--   cache directory.
+getPaths :: Params c -> IO (FilePath, FilePath, FilePath, FilePath)
+getPaths params@Params{projectName = pName} = do
+    args <- getArgs
+    thisBinary <- getExecutablePath
+    let debug = "--dyre-debug" `elem` args
+    cwd <- getCurrentDirectory
+    cacheDir  <- case (debug, cacheDir params) of
+                      (True,  _      ) -> return $ cwd </> "cache"
+                      (False, Nothing) -> getUserCacheDir pName
+                      (False, Just cd) -> cd
+    configDir <- case (debug, configDir params) of
+                      (True,  _      ) -> return $ cwd
+                      (False, Nothing) -> getUserConfigDir pName
+                      (False, Just cd) -> cd
+    let tempBinary = cacheDir </> pName ++ "-" ++ os ++ "-" ++ arch
+    let configFile = configDir </> pName ++ ".hs"
+    return $ (thisBinary, tempBinary, configFile, cacheDir)
 
 -- | Check if a file exists. If it exists, return Just the modification
 --   time. If it doesn't exist, return Nothing.
