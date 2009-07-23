@@ -6,16 +6,10 @@ with new configurations. The inspiration for all this is, of course, Xmonad's
 reconfiguration functionality. It is similar in usage to the HConf library
 which was written for the Yi editor.
 
-But while HConf allows the program to be restarted under itself without losing
-state data, Dyre leaves that capability up to the program using it. This design
-choice was made because there are many possible programs which could need to use
-dynamic recompilation, but for which the idea of persistent state is utterly
-meaningless.
-
 Basic Usage
 -----------
 
-The entire interface to the Dyre library consists of three items: a datatype for
+The main interface to the Dyre library consists of three items: a datatype for
 configuration data, a set of default values, and a function which makes that data
 into an entry-point function.
 
@@ -49,3 +43,19 @@ new program entry point. When called with a configuration, it will hand off the
 control to Dyre, which will proceed to recompile and run the custom configuration
 as needed. Eventually, the flow of control will pass back into the `realMain`
 function, at which time Dyre is completely out of the picture.
+
+Restarting and Persistent State
+-------------------------------
+
+Restarting is handled by the `Config.Dyre.Relaunch` module. The important
+functions are the `relaunchWithState`, and `restoreState` functions. Together,
+they require that your state type be a member of the `Read` and `Show`
+typeclasses.
+
+State can be saved with the `relaunchWithState` function, which takes a state
+and an optional list of arguments. The master binary will be executed with the
+arguments after writing the state to disk.
+
+State is restored with the `restoreState` function. The function takes a default
+state, which is returned when there is no state saved to disk, and should only
+be called once, as the state file is removed after that.
