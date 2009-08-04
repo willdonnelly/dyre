@@ -3,7 +3,7 @@ module Config.Dyre ( wrapMain, Params(..), defaultParams ) where
 import System.IO           ( hPutStrLn, stderr )
 import System.Environment  ( getArgs )
 import System.Directory    ( doesFileExist )
-import System.IO.Storage   ( clearAll, getValueDefault )
+import System.IO.Storage   ( withStore, getDefaultValue )
 
 import Config.Dyre.Params  ( Params(..) )
 import Config.Dyre.Compile ( customCompile )
@@ -27,9 +27,8 @@ defaultParams = Params
 --   entry point, which will then be called by the 'main' function, as well
 --   as by any custom configurations.
 wrapMain :: Params cfgType -> cfgType -> IO ()
-wrapMain params@Params{projectName = pName} cfg = do
+wrapMain params@Params{projectName = pName} cfg = withStore "dyre" $ do
     -- Store some data for later
-    clearAll "dyre"
     storeFlagValue "--dyre-state-persist=" "persistState"
     storeFlagValue "--dyre-master-binary=" "masterBinary"
     storeFlagState "--force-reconf"        "forceReconf"
@@ -46,7 +45,7 @@ wrapMain params@Params{projectName = pName} cfg = do
     -- If there's a config file, and the temp binary is older than something
     -- else, or we were specially told to recompile, then we should recompile.
     let confExists = confTime /= Nothing
-    forceReconf <- getValueDefault False "dyre" "forceReconf"
+    forceReconf <- getDefaultValue "dyre" "forceReconf" False
     errors <- if confExists &&
                  (tempTime < confTime || tempTime < thisTime || forceReconf)
                  then customCompile params

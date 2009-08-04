@@ -10,7 +10,7 @@ executing the custom binary on different platforms.
 module Config.Dyre.Exec ( customExec ) where
 
 import System.Posix.Process          ( executeFile )
-import System.IO.Storage             ( getValueDefault, getValue, clearAll )
+import System.IO.Storage             ( getDefaultValue, getValue )
 import System.Environment.Executable ( getExecutablePath )
 import Config.Dyre.Util              ( strippedArgs )
 import Config.Dyre.Params            ( Params(..) )
@@ -24,18 +24,15 @@ customExec params@Params{statusOut = output} tempBinary = do
 
     -- Calculate some arguments
     binaryPath <- getExecutablePath
-    masterPath <- getValueDefault binaryPath "dyre" "masterBinary"
+    masterPath <- getDefaultValue "dyre" "masterBinary" binaryPath
     stateFile  <- getValue "dyre" "persistState"
-    debugMode  <- getValueDefault False "dyre" "debugMode"
+    debugMode  <- getDefaultValue "dyre" "debugMode" False
     argsA      <- strippedArgs
     let argsB = if debugMode then ("--dyre-debug":argsA) else argsA
     let argsC = case stateFile of
                      Nothing -> argsB
                      Just sf -> ("--dyre-state-persist=" ++ sf):argsB
     let argsD = ("--dyre-master-binary=" ++ masterPath):argsC
-
-    -- Clear the data store
-    clearAll "dyre"
 
     -- And execute with the new arguments
     executeFile tempBinary False argsD Nothing

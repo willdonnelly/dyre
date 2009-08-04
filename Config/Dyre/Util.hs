@@ -6,7 +6,7 @@ import System.FilePath                ( (</>) )
 import System.Directory               ( getCurrentDirectory
                                       , doesFileExist
                                       , getModificationTime )
-import System.IO.Storage              ( putValue, getValueDefault )
+import System.IO.Storage              ( putValue, getValue, getDefaultValue )
 import System.Environment             ( getArgs )
 import System.Environment.XDG.BaseDir ( getUserCacheDir, getUserConfigDir )
 import System.Environment.Executable  ( getExecutablePath )
@@ -33,7 +33,7 @@ storeFlagState flagString storeName = do
 getPaths :: Params c -> IO (FilePath, FilePath, FilePath, FilePath)
 getPaths params@Params{projectName = pName} = do
     thisBinary <- getExecutablePath
-    debugMode  <- getValueDefault False "dyre" "debugMode"
+    debugMode  <- getDefaultValue "dyre" "debugMode" False
     cwd <- getCurrentDirectory
     cacheDir  <- case (debugMode, cacheDir params) of
                       (True,  _      ) -> return $ cwd </> "cache"

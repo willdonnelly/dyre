@@ -10,22 +10,19 @@ import System.IO            ( writeFile, readFile )
 import System.IO.Error      ( try )
 import System.FilePath      ( (</>) )
 import System.Directory     ( getTemporaryDirectory, removeFile )
-import System.IO.Storage    ( getValue, getValueDefault, clearAll )
+import System.IO.Storage    ( getValue, getDefaultValue )
 import System.Environment   ( getProgName, getArgs )
 import System.Posix.Process ( executeFile, getProcessID )
 
 relaunchMaster :: [String] -> IO ()
 relaunchMaster argsA = do
     -- Add debug flag to args if necessary
-    debugMode  <- getValueDefault False "dyre" "debugMode"
+    debugMode  <- getDefaultValue "dyre" "debugMode" False
     let argsB = if debugMode then ("--dyre-debug":argsA) else argsA
 
     -- Get the path or name of the master program
     masterName <- getProgName
     masterPath <- getValue "dyre" "masterBinary"
-
-    -- Clear the data store
-    clearAll "dyre"
 
     -- If we have a path, run it, otherwise hope the name works
     case masterPath of

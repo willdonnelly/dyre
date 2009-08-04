@@ -12,8 +12,6 @@ options that only Dyre needs to see.
 module Config.Dyre.Launch ( launchMain ) where
 
 import System.Environment ( withArgs )
-import System.IO.Storage  ( clearAll )
-import Control.Exception  ( finally )
 import Config.Dyre.Params ( Params(..) )
 import Config.Dyre.Util   ( strippedArgs )
 
@@ -26,5 +24,4 @@ launchMain params errors cfg = do
     let configData = case errors of
                           Nothing -> cfg
                           Just er -> (showError params) cfg er
-    finally (withArgs args $ realMain params $ cfg)
-            (clearAll "dyre")
+    withArgs args . (realMain params) $ cfg
