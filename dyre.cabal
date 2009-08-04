@@ -1,5 +1,5 @@
 name:          dyre
-version:       0.2
+version:       0.3
 category:      Development
 synopsis:      Dynamic reconfiguration in Haskell
 
@@ -22,12 +22,12 @@ cabal-version: >= 1.6
 
 library
   exposed-modules: Config.Dyre,
-                   Config.Dyre.Params,
-                   Config.Dyre.Compile,
                    Config.Dyre.Exec,
-                   Config.Dyre.Launch,
-                   Config.Dyre.Relaunch,
-                   Config.Dyre.Util
+                   Config.Dyre.Paths,
+                   Config.Dyre.Params,
+                   Config.Dyre.Options,
+                   Config.Dyre.Compile,
+                   Config.Dyre.Relaunch
   build-depends:   base >= 4 && < 5, process, unix,
                    directory, filepath, ghc-paths,
                    executable-path, xdg-basedir,

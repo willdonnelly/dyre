@@ -1,9 +1,4 @@
 {- |
-The functions defined here should never be used directly by a program.
-They are documented for readability and maintenance purposes, and their
-behaviour should never be relied upon to remain the same. Only the
-exports from the main 'Dyre' module should be relied upon.
-
 That said, the functions herein deal with compilation of the custom
 configuration. The majority of the code actually deals with error
 handling, and not the compilation itself /per se/.
@@ -14,20 +9,21 @@ import System.IO         ( openFile, hClose, IOMode(..) )
 import System.Exit       ( ExitCode(..) )
 import System.Process    ( runProcess, waitForProcess )
 import System.FilePath   ( (</>) )
-import System.Directory  ( getCurrentDirectory, createDirectoryIfMissing, doesFileExist, removeFile )
+import System.Directory  ( getCurrentDirectory, doesFileExist
+                         , createDirectoryIfMissing )
 import Control.Exception ( bracket )
 import GHC.Paths         ( ghc )
 
-import Config.Dyre.Util   ( getPaths )
+import Config.Dyre.Paths  ( getPaths )
 import Config.Dyre.Params ( Params(..) )
 
 -- | Attempts to compile the configuration file. Errors will be stored in
---   the '<tmpPath>/errors.log' file. Will return a boolean indicating if
---   there is a custom binary to execute.
+--   the '<tmpPath>/errors.log' file. Will return a string containing any
+--   compiler output.
 customCompile :: Params cfgType -> IO (Maybe String)
 customCompile params@Params{statusOut = output} = do
-    -- Get important paths
     (thisBinary, tempBinary, configFile, cacheDir) <- getPaths params
+    -- Get important paths
     output $ "Configuration '" ++ configFile ++  "' changed. Recompiling."
 
     -- Open the error file and compile
