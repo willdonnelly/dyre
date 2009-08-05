@@ -23,11 +23,10 @@ import Config.Dyre.Params ( Params(..) )
 customCompile :: Params cfgType -> IO (Maybe String)
 customCompile params@Params{statusOut = output} = do
     (thisBinary, tempBinary, configFile, cacheDir) <- getPaths params
-    -- Get important paths
     output $ "Configuration '" ++ configFile ++  "' changed. Recompiling."
-
-    -- Open the error file and compile
     createDirectoryIfMissing True cacheDir
+
+    -- Compile occurs in here
     let errFile = cacheDir </> "errors.log"
     result <- bracket (openFile errFile WriteMode) hClose $ \errHandle -> do
         ghcOpts <- makeFlags params configFile tempBinary
