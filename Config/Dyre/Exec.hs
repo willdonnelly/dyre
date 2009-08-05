@@ -5,7 +5,6 @@ executing the custom binary on different platforms.
 module Config.Dyre.Exec ( customExec ) where
 
 import System.Posix.Process ( executeFile )
-import System.IO.Storage    ( getDefaultValue, getValue )
 import System.Environment   ( getArgs )
 import Config.Dyre.Params   ( Params(..) )
 import Config.Dyre.Options  ( customOptions )
