@@ -5,7 +5,7 @@ import System.Directory    ( doesFileExist )
 
 import Config.Dyre.Params  ( Params(..) )
 import Config.Dyre.Compile ( customCompile )
-import Config.Dyre.Exec    ( customExec )
+import Config.Dyre.Compat  ( customExec )
 import Config.Dyre.Options ( getReconf, getDebug, withDyreOptions )
 import Config.Dyre.Paths   ( getPaths, maybeModTime )
 
@@ -47,7 +47,8 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions $ do
     -- just launch the main function, reporting errors if appropriate.
     customExists <- doesFileExist tempBinary
     if customExists && (thisBinary /= tempBinary)
-       then customExec params tempBinary
+       then do statusOut params $ "Launching custom binary '" ++ tempBinary ++ "'\n"
+               customExec tempBinary Nothing
        else realMain params $ case errors of
                                    Nothing -> cfg
                                    Just er -> (showError params) cfg er

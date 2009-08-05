@@ -10,23 +10,22 @@ import System.IO            ( writeFile, readFile )
 import System.IO.Error      ( try )
 import System.FilePath      ( (</>) )
 import System.Directory     ( getTemporaryDirectory, removeFile )
-import System.Posix.Process ( executeFile, getProcessID )
 
 import System.IO.Storage    ( putValue, delValue )
 import Config.Dyre.Options  ( customOptions, getMasterBinary, getStatePersist )
+import Config.Dyre.Compat   ( customExec, getPIDString )
 
 relaunchMaster :: Maybe [String] -> IO ()
 relaunchMaster otherArgs = do
-    args <- customOptions otherArgs
     masterPath <- fmap fromJust getMasterBinary
-    executeFile masterPath False args Nothing
+    customExec masterPath otherArgs
 
 relaunchWithState :: Show a => a -> Maybe [String] -> IO ()
 relaunchWithState state otherArgs = do
     -- Calculate the path to the state file
-    procID   <- getProcessID
-    tempDir  <- getTemporaryDirectory
-    let statePath = tempDir </> (show procID) ++ ".state"
+    pidString <- getPIDString
+    tempDir   <- getTemporaryDirectory
+    let statePath = tempDir </> pidString ++ ".state"
     -- Write the state to the file and store the path
     writeFile statePath . show $ state
     putValue "dyre" "persistState" statePath
@@ -42,7 +41,7 @@ maybeRestoreState = do
          Nothing -> return Nothing
          Just sp -> do
              stateData <- readFile sp
-             removeFile sp
+--             removeFile sp
              delValue "dyre" "persistState"
              result <- try $ readIO stateData
              case result of

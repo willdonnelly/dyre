@@ -22,16 +22,20 @@ cabal-version: >= 1.6
 
 library
   exposed-modules: Config.Dyre,
-                   Config.Dyre.Exec,
                    Config.Dyre.Paths,
+                   Config.Dyre.Compat,
                    Config.Dyre.Params,
                    Config.Dyre.Options,
                    Config.Dyre.Compile,
                    Config.Dyre.Relaunch
-  build-depends:   base >= 4 && < 5, process, unix,
-                   directory, filepath, ghc-paths,
-                   executable-path, xdg-basedir,
-                   io-storage
+  build-depends:   base >= 4 && < 5, process, filepath,
+                   directory, ghc-paths, executable-path,
+                   xdg-basedir, io-storage
+
+  if os(windows)
+      build-depends: Win32
+  else
+      build-depends: unix
 
 source-repository head
   type:      git
