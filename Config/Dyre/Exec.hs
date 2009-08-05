@@ -5,7 +5,6 @@ executing the custom binary on different platforms.
 module Config.Dyre.Exec ( customExec ) where
 
 import System.Posix.Process ( executeFile )
-import System.Environment   ( getArgs )
 import Config.Dyre.Params   ( Params(..) )
 import Config.Dyre.Options  ( customOptions )
 
@@ -14,6 +13,5 @@ import Config.Dyre.Options  ( customOptions )
 customExec :: Params cfgType -> FilePath -> IO ()
 customExec params@Params{statusOut = output} tempBinary = do
     output $ "Launching custom binary '" ++ tempBinary ++ "'\n"
-    oArgs <- getArgs
-    cArgs <- customOptions
-    executeFile tempBinary False (oArgs ++ cArgs) Nothing
+    args <- customOptions Nothing
+    executeFile tempBinary False args Nothing

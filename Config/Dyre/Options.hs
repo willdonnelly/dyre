@@ -8,6 +8,7 @@ module Config.Dyre.Options
   ) where
 
 import Data.List
+import Data.Maybe
 import System.IO.Storage
 import System.Environment
 import System.Environment.Executable
@@ -37,13 +38,13 @@ getMasterBinary = getValue "dyre" "masterBinary"
 getStatePersist :: IO (Maybe String)
 getStatePersist = getValue "dyre" "persistState"
 
-customOptions :: IO [String]
-customOptions = do
+customOptions :: Maybe [String] -> IO [String]
+customOptions otherArgs = do
     binaryPath <- getExecutablePath
     masterPath <- getDefaultValue "dyre" "masterBinary" binaryPath
     stateFile  <- getStatePersist
     debugMode  <- getDebug
-    return . filter (not . null) $
+    return . filter (not . null) $ fromMaybe [] otherArgs ++
         [ if debugMode then "--dyre-debug" else ""
         , case stateFile of
                Nothing -> ""

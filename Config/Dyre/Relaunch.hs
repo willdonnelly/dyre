@@ -10,16 +10,15 @@ import System.IO            ( writeFile, readFile )
 import System.IO.Error      ( try )
 import System.FilePath      ( (</>) )
 import System.Directory     ( getTemporaryDirectory, removeFile )
-import System.Environment   ( getProgName, getArgs )
+import System.Environment   ( getProgName )
 import System.Posix.Process ( executeFile, getProcessID )
 
 import System.IO.Storage    ( putValue, delValue )
 import Config.Dyre.Options  ( customOptions, getMasterBinary, getStatePersist )
 
-relaunchMaster :: [String] -> IO ()
-relaunchMaster oArgs = do
-    cArgs <- customOptions
-    let args = oArgs ++ cArgs
+relaunchMaster :: Maybe [String] -> IO ()
+relaunchMaster otherArgs = do
+    args <- customOptions otherArgs
 
     -- Get the program name and path
     masterName <- getProgName
@@ -31,7 +30,7 @@ relaunchMaster oArgs = do
          Just mp -> executeFile mp False args Nothing
 
 relaunchWithState :: Show a => a -> Maybe [String] -> IO ()
-relaunchWithState state cArgs = do
+relaunchWithState state otherArgs = do
     -- Calculate the path to the state file
     progName <- getProgName
     procID   <- getProcessID
@@ -43,8 +42,7 @@ relaunchWithState state cArgs = do
     putValue "dyre" "persistState" statePath
 
     -- Relaunch
-    oArgs <- getArgs
-    relaunchMaster (fromMaybe oArgs cArgs)
+    relaunchMaster otherArgs
 
 maybeRestoreState :: Read a => IO (Maybe a)
 maybeRestoreState = do
