@@ -33,21 +33,21 @@ relaunchWithState state otherArgs = do
     -- Relaunch
     relaunchMaster otherArgs
 
+-- This could probably be a lot simpler if I grokked
+-- monad transformers better.
 maybeRestoreState :: Read a => IO (Maybe a)
 maybeRestoreState = do
     statePath <- getStatePersist
     case statePath of
          Nothing -> return Nothing
-         Just sp -> do stateData <- readFile sp
-                       removeFile sp
-                       delValue "dyre" "persistState"
-                       errorToMaybe $ readIO stateData
-
-errorToMaybe :: IO a -> IO (Maybe a)
-errorToMaybe a = do tryValue <- try a
-                    case tryValue of
-                         Left  _ -> return $ Nothing
-                         Right v -> return $ Just v
+         Just sp -> do
+             stateData <- readFile sp
+             removeFile sp
+             delValue "dyre" "persistState"
+             result <- try $ readIO stateData
+             case result of
+                  Left  _ -> return $ Nothing
+                  Right v -> return $ Just v
 
 restoreState :: Read a => a -> IO a
 restoreState d = fmap (fromMaybe d) maybeRestoreState
