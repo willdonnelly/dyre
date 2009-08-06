@@ -114,7 +114,7 @@ defaultParams = Params
     }
 
 -- | 'wrapMain' is how Dyre recieves control of the program. It is expected
---   that it will be partially applied with its parameters to yield a "main"
+--   that it will be partially applied with its parameters to yield a 'main'
 --   entry point, which will then be called by the 'main' function, as well
 --   as by any custom configurations.
 wrapMain :: Params cfgType -> cfgType -> IO ()
