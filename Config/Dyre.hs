@@ -45,8 +45,10 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions $ do
 
     -- If there's a custom binary and we're not it, run it. Otherwise
     -- just launch the main function, reporting errors if appropriate.
+    -- Also we don't want to use a custom binary if the conf file is
+    -- gone.
     customExists <- doesFileExist tempBinary
-    if customExists && (thisBinary /= tempBinary)
+    if confExists && customExists && (thisBinary /= tempBinary)
        then do statusOut params $ "Launching custom binary '" ++ tempBinary ++ "'\n"
                customExec tempBinary Nothing
        else realMain params $ case errors of
