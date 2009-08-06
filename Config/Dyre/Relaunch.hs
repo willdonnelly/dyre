@@ -10,6 +10,13 @@ little cheating we do using the 'System.IO.Storage' library. Of
 course, we can't use the stored data unless something else put
 it there, so this module will probably explode horribly if used
 outside of a program whose recompilation is managed by Dyre.
+
+The functions for saving and loading state come in two variants:
+one which uses the 'Read' and 'Show' typeclasses, and one which
+uses Data.Binary to serialize it. The 'Read' and 'Show' versions
+are much easier to use thanks to automatic deriving, but the
+binary versions offer more control over saving and loading, as
+well as probably being a bit faster.
 -}
 module Config.Dyre.Relaunch
   ( relaunchMaster
