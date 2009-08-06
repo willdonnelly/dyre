@@ -1,6 +1,6 @@
 name:          dyre
 version:       0.4
-category:      Development
+category:      Development, Configuration
 synopsis:      Dynamic reconfiguration in Haskell
 
 description:   Dyre implements dynamic reconfiguration facilities after the
