@@ -8,6 +8,9 @@ description:   Dyre implements dynamic reconfiguration facilities after the
                sacrificing features, and places an emphasis on simplicity of
                integration with an application.
 
+               A full introduction with a complete example project can be found
+               in the documentation for 'Config.Dyre'
+
 homepage:      http://github.com/willdonnelly/dyre
 bug-reports:   http://github.com/willdonnelly/dyre/issues
 stability:     alpha
