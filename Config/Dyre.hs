@@ -39,7 +39,7 @@ is as follows:
 >showError cfg msg = cfg { errorMsg = Just msg }
 >
 >realMain Config{message = message, errorMsg = errorMsg } = do
->    (State buffer) <- restoreState $ State []
+>    (State buffer) <- restoreTextState $ State []
 >    case errorMsg of
 >         Nothing -> return ()
 >         Just em -> putStrLn $ "Error: " ++ em
@@ -50,7 +50,7 @@ is as follows:
 >    case input of
 >         "exit" -> return ()
 >         "quit" -> return ()
->         other  -> relaunchWithState (State $ other:buffer) Nothing
+>         other  -> relaunchWithTextState (State $ other:buffer) Nothing
 >
 >dyreExample = Dyre.wrapMain $ Dyre.defaultParams
 >    { Dyre.projectName = "dyreExample"

@@ -12,14 +12,18 @@ it there, so this module will probably explode horribly if used
 outside of a program whose recompilation is managed by Dyre.
 -}
 module Config.Dyre.Relaunch
-  ( relaunchWithState
-  , restoreState
-  , relaunchMaster
-  , maybeRestoreState
+  ( relaunchMaster
+  , relaunchWithTextState
+  , relaunchWithBinaryState
+  , saveTextState
+  , saveBinaryState
+  , restoreTextState
+  , restoreBinaryState
   ) where
 
 import Data.Maybe           ( fromMaybe, fromJust )
 import System.IO            ( writeFile, readFile )
+import Data.Binary          ( Binary, encodeFile, decodeFile )
 import System.IO.Error      ( try )
 import System.FilePath      ( (</>) )
 import System.Directory     ( getTemporaryDirectory, removeFile )
@@ -29,48 +33,77 @@ import Config.Dyre.Options  ( customOptions, getMasterBinary, getStatePersist )
 import Config.Dyre.Compat   ( customExec, getPIDString )
 
 -- | Just relaunch the master binary. We don't have any important
---   state to worry about. (Or, like when 'relaunchWithState' calls
---   it, we're managing state on our own.)
+--   state to worry about. (Or, like when 'relaunchWith<X>State' calls
+--   it, we're managing state on our own). It takes an argument which
+--   can optionally specify a new set of arguments. If it is given a
+--   value of 'Nothing', the current value of 'getArgs' will be used.
 relaunchMaster :: Maybe [String] -> IO ()
 relaunchMaster otherArgs = do
     masterPath <- fmap fromJust getMasterBinary
     customExec masterPath otherArgs
 
 -- | Relaunch the master binary, but first preserve the program
---   state so that we can use the 'restoreState' functions to get
---   it back again later. Since we're not trying to be fancy here,
---   we'll just use 'show' to write it out.
-relaunchWithState :: Show a => a -> Maybe [String] -> IO ()
-relaunchWithState state otherArgs = do
-    -- Calculate the path to the state file
+--   state so that we can use the 'restoreTextState' functions to
+--   get it back again later.
+relaunchWithTextState :: Show a => a -> Maybe [String] -> IO ()
+relaunchWithTextState state otherArgs = do
+    saveTextState state
+    relaunchMaster otherArgs
+
+-- | Serialize the state for later restoration with 'restoreBinaryState',
+--   and then relaunch the master binary.
+relaunchWithBinaryState :: Binary a => a -> Maybe [String] -> IO ()
+relaunchWithBinaryState state otherArgs = do
+    saveBinaryState state
+    relaunchMaster otherArgs
+
+-- | Calculate the path that will be used for saving the state.
+--   The path used to load the state, meanwhile, is passed to the
+--   program with the '--dyre-persist-state=<path>' flag.
+genStatePath :: IO FilePath
+genStatePath = do
     pidString <- getPIDString
     tempDir   <- getTemporaryDirectory
     let statePath = tempDir </> pidString ++ ".state"
-    -- Write the state to the file and store the path
-    writeFile statePath . show $ state
     putValue "dyre" "persistState" statePath
-    -- Relaunch
-    relaunchMaster otherArgs
+    return statePath
 
--- | Restore state that was previously saved by the 'relaunchWithState'
---   function. If unsuccessful, it will simply return Nothing.
-maybeRestoreState :: Read a => IO (Maybe a)
--- This could probably be a lot simpler if I grokked
--- monad transformers better.
-maybeRestoreState = do
+-- | Serialize a state as text, for later loading with the
+--   'restoreTextState' function.
+saveTextState :: Show a => a -> IO ()
+saveTextState state = do
+    statePath <- genStatePath
+    writeFile statePath . show $ state
+
+-- | Serialize a state as binary data, for later loading with
+--   the 'restoreBinaryState' function.
+saveBinaryState :: Binary a => a -> IO ()
+saveBinaryState state = do
+    statePath <- genStatePath
+    encodeFile statePath . Just $ state
+
+-- | Restore state which has been serialized through the
+--   'saveTextState' function. Takes a default which is
+--   returned if the state doesn't exist.
+restoreTextState :: Read a => a -> IO a
+restoreTextState d = do
     statePath <- getStatePersist
     case statePath of
-         Nothing -> return Nothing
+         Nothing -> return d
          Just sp -> do
              stateData <- readFile sp
---             removeFile sp
-             delValue "dyre" "persistState"
              result <- try $ readIO stateData
              case result of
-                  Left  _ -> return $ Nothing
-                  Right v -> return $ Just v
+                  Left  _ -> return d
+                  Right v -> return v
 
--- | Restore state using the 'maybeRestoreState' function, but return
---   the provided default state if we can't get anything better.
-restoreState :: Read a => a -> IO a
-restoreState d = fmap (fromMaybe d) maybeRestoreState
+-- | Restore state which has been serialized through the
+--   'saveBinaryState' function. Takes a default which is
+--   returned if the state doesn't exist.
+restoreBinaryState :: Binary a => a -> IO a
+restoreBinaryState d = do
+    statePath <- getStatePersist
+    case statePath of
+         Nothing -> return d
+         Just sp -> do state <- decodeFile sp
+                       return $ fromMaybe d state
