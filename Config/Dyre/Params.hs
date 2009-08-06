@@ -1,11 +1,16 @@
 {- |
-This module defines the 'Params' datatype which Dyre uses to define
-all program-specific configuration data. This module doesn't need to
-be imported specially because the 'Params' datatype is re-exported
-from the main 'Dyre' module.
+Defines the 'Params' datatype which Dyre uses to define all
+program-specific configuration data. Shouldn't be imported
+directly, as 'Config.Dyre' re-exports it.
 -}
 module Config.Dyre.Params ( Params(..) ) where
 
+-- | This structure is how all kinds of useful data is fed into Dyre. Of
+--   course, only the 'projectName', 'realMain', and 'showError' fields
+--   are really necessary. By using the set of default values provided
+--   as 'Config.Dyre.defaultParams', you can get all the benefits of
+--   using Dyre to configure your program in only five or six lines of
+--   code.
 data Params cfgType = Params
     { projectName  :: String
     -- ^ The name of the project. This needs to also be the name of

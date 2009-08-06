@@ -1,7 +1,6 @@
 {- |
-That said, the functions herein deal with compilation of the custom
-configuration. The majority of the code actually deals with error
-handling, and not the compilation itself /per se/.
+Compiling the custom executable. The majority of the code actually
+deals with error handling, and not the compilation itself /per se/.
 -}
 module Config.Dyre.Compile ( customCompile ) where
 
@@ -17,9 +16,8 @@ import GHC.Paths         ( ghc )
 import Config.Dyre.Paths  ( getPaths )
 import Config.Dyre.Params ( Params(..) )
 
--- | Attempts to compile the configuration file. Errors will be stored in
---   the '<tmpPath>/errors.log' file. Will return a string containing any
---   compiler output.
+-- | Attempts to compile the configuration file. Will return a string
+--   containing any compiler output.
 customCompile :: Params cfgType -> IO (Maybe String)
 customCompile params@Params{statusOut = output} = do
     (thisBinary, tempBinary, configFile, cacheDir) <- getPaths params

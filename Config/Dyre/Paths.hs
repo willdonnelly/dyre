@@ -1,6 +1,7 @@
 module Config.Dyre.Paths where
 
 import System.Info
+import System.Time
 import System.FilePath
 import System.Directory
 import System.Environment.Executable
@@ -9,8 +10,8 @@ import System.Environment.XDG.BaseDir
 import Config.Dyre.Params
 import Config.Dyre.Options
 
--- | Calculate the paths to the three important files and the
---   cache directory.
+-- | Return the paths to, respectively, the current binary, the custom
+--   binary, the config file, and the cache directory.
 getPaths :: Params c -> IO (FilePath, FilePath, FilePath, FilePath)
 getPaths params@Params{projectName = pName} = do
     thisBinary <- getExecutablePath
@@ -30,6 +31,7 @@ getPaths params@Params{projectName = pName} = do
 
 -- | Check if a file exists. If it exists, return Just the modification
 --   time. If it doesn't exist, return Nothing.
+maybeModTime :: FilePath -> IO (Maybe ClockTime)
 maybeModTime path = do
     fileExists <- doesFileExist path
     if fileExists

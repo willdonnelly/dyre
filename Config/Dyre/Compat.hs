@@ -1,6 +1,10 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 
+{- |
+Compatibility code for things that need to be done differently
+on different systems.
+-}
 module Config.Dyre.Compat ( customExec, getPIDString ) where
 
 import Config.Dyre.Options ( customOptions )
@@ -18,7 +22,6 @@ foreign import stdcall unsafe "winbase.h GetCurrentProcessId"
     c_GetCurrentProcessID :: IO DWORD
 getPIDString = fmap show c_GetCurrentProcessID
 
-customExec :: FilePath -> Maybe [String] -> IO ()
 customExec binary mArgs = do
     args <- customOptions mArgs
     -- This whole thing is a terrible, ugly hack. Since Windows
@@ -51,14 +54,18 @@ foreign import stdcall unsafe "winbase.h ExitProcess"
 
 import System.Posix.Process ( executeFile, getProcessID )
 
-getPIDString :: IO String
 getPIDString = fmap show getProcessID
 
--- | Called when execution needs to be transferred over to
---   the custom-compiled binary.
-customExec :: FilePath -> Maybe [String] -> IO ()
 customExec binary mArgs = do
     args <- customOptions mArgs
     executeFile binary False args Nothing
 
 #endif
+
+-- | Called whenever execution needs to be transferred over to
+--   a different binary.
+customExec :: FilePath -> Maybe [String] -> IO ()
+
+-- | What it says on the tin. Gets the current PID as a string.
+--   Used to determine the name for the state file during restarts.
+getPIDString :: IO String
