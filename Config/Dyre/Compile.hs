@@ -53,7 +53,7 @@ makeFlags Params{ghcOpts = flags, hidePackages = hides}
           cfgFile tmpFile cacheDir = do
     currentDir <- getCurrentDirectory
     return . concat $ [ ["-v0", "-fforce-recomp", "-i" ++ currentDir]
-                      , ["-odir", cacheDir, "-hidir", cacheDir]
+                      , ["-outputdir", cacheDir]
                       , prefix "-hide-package" hides, flags
                       , ["--make", cfgFile, "-o", tmpFile]
                       ]
