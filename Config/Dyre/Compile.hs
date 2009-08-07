@@ -27,7 +27,7 @@ customCompile params@Params{statusOut = output} = do
     -- Compile occurs in here
     let errFile = cacheDir </> "errors.log"
     result <- bracket (openFile errFile WriteMode) hClose $ \errHandle -> do
-        ghcOpts <- makeFlags params configFile tempBinary
+        ghcOpts <- makeFlags params configFile tempBinary cacheDir
         ghcProc <- runProcess ghc ghcOpts (Just cacheDir) Nothing
                               Nothing Nothing (Just errHandle)
         waitForProcess ghcProc
@@ -48,10 +48,12 @@ customCompile params@Params{statusOut = output} = do
                   else return . Just $ errors
 
 -- | Assemble the arguments to GHC so everything compiles right.
-makeFlags :: Params cfgType -> FilePath -> FilePath -> IO [String]
-makeFlags Params{ghcOpts = flags, hidePackages = hides} cfgFile tmpFile = do
+makeFlags :: Params cfgType -> FilePath -> FilePath -> FilePath -> IO [String]
+makeFlags Params{ghcOpts = flags, hidePackages = hides}
+          cfgFile tmpFile cacheDir = do
     currentDir <- getCurrentDirectory
     return . concat $ [ ["-v0", "-fforce-recomp", "-i" ++ currentDir]
+                      , ["-odir", cacheDir, "-hidir", cacheDir]
                       , prefix "-hide-package" hides, flags
                       , ["--make", cfgFile, "-o", tmpFile]
                       ]
