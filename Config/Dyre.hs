@@ -104,6 +104,7 @@ import Config.Dyre.Paths   ( getPaths, maybeModTime )
 defaultParams :: Params cfgType
 defaultParams = Params
     { projectName  = undefined
+    , configCheck  = True
     , configDir    = Nothing
     , cacheDir     = Nothing
     , realMain     = undefined
@@ -119,31 +120,36 @@ defaultParams = Params
 --   as by any custom configurations.
 wrapMain :: Params cfgType -> cfgType -> IO ()
 wrapMain params@Params{projectName = pName} cfg = withDyreOptions $ do
-    -- Get the important paths
-    (thisBinary, tempBinary, configFile, cacheDir) <- getPaths params
+    -- Allow the 'configCheck' parameter to disable all of Dyre's recompilation
+    -- checks, in favor of simply proceeding ahead to the 'realMain' function.
+    if not $ configCheck params
+       then realMain params cfg
+       else do
+        -- Get the important paths
+        (thisBinary, tempBinary, configFile, cacheDir) <- getPaths params
 
-    -- Check their modification times
-    thisTime <- maybeModTime thisBinary
-    tempTime <- maybeModTime tempBinary
-    confTime <- maybeModTime configFile
+        -- Check their modification times
+        thisTime <- maybeModTime thisBinary
+        tempTime <- maybeModTime tempBinary
+        confTime <- maybeModTime configFile
 
-    -- If there's a config file, and the temp binary is older than something
-    -- else, or we were specially told to recompile, then we should recompile.
-    let confExists = confTime /= Nothing
-    forceReconf <- getReconf
-    errors <- if confExists &&
-                 (tempTime < confTime || tempTime < thisTime || forceReconf)
-                 then customCompile params
-                 else return Nothing
+        -- If there's a config file, and the temp binary is older than something
+        -- else, or we were specially told to recompile, then we should recompile.
+        let confExists = confTime /= Nothing
+        forceReconf <- getReconf
+        errors <- if confExists &&
+                     (tempTime < confTime || tempTime < thisTime || forceReconf)
+                     then customCompile params
+                     else return Nothing
 
-    -- If there's a custom binary and we're not it, run it. Otherwise
-    -- just launch the main function, reporting errors if appropriate.
-    -- Also we don't want to use a custom binary if the conf file is
-    -- gone.
-    customExists <- doesFileExist tempBinary
-    if confExists && customExists && (thisBinary /= tempBinary)
-       then do statusOut params $ "Launching custom binary '" ++ tempBinary ++ "'\n"
-               customExec tempBinary Nothing
-       else realMain params $ case errors of
-                                   Nothing -> cfg
-                                   Just er -> (showError params) cfg er
+        -- If there's a custom binary and we're not it, run it. Otherwise
+        -- just launch the main function, reporting errors if appropriate.
+        -- Also we don't want to use a custom binary if the conf file is
+        -- gone.
+        customExists <- doesFileExist tempBinary
+        if confExists && customExists && (thisBinary /= tempBinary)
+           then do statusOut params $ "Launching custom binary '" ++ tempBinary ++ "'\n"
+                   customExec tempBinary Nothing
+           else realMain params $ case errors of
+                                       Nothing -> cfg
+                                       Just er -> (showError params) cfg er

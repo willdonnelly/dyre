@@ -15,6 +15,10 @@ data Params cfgType = Params
     { projectName  :: String
     -- ^ The name of the project. This needs to also be the name of
     --   the executable, and the name of the configuration file.
+    , configCheck  :: Bool
+    -- ^ Should Dyre look for and attempt to compile custom configurations?
+    --   Useful for creating program entry points that bypass Dyre's
+    --   recompilation, for testing purposes.
     , configDir    :: Maybe (IO FilePath)
     -- ^ The directory to look for a configuration file in.
     , cacheDir     :: Maybe (IO FilePath)
