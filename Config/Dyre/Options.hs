@@ -31,18 +31,21 @@ import System.IO.Storage
 import System.Environment
 import System.Environment.Executable
 
+import Config.Dyre.Params
+
 -- | Store Dyre's command-line options to the IO-Store "dyre",
 --   and then execute the provided IO action with all Dyre's
 --   options removed from the command-line arguments.
-withDyreOptions :: IO a -> IO a
-withDyreOptions action = withStore "dyre" $ do
+withDyreOptions :: Params c -> IO a -> IO a
+withDyreOptions Params{configCheck = check} action = withStore "dyre" $ do
     -- Pretty important
     args <- getArgs
 
     -- If the flag exists, it overrides the current file. Likewise,
     --   if it doesn't exist, we end up with the path to our current
     --   file. This seems like a sensible way to do it.
-    this <- getExecutablePath
+    -- Don't use 'getExecutablePath' if we're byassing the rest of Dyre.
+    this <- if check then getExecutablePath else getProgName
     putValue "dyre" "masterBinary" this
     storeFlag args "--dyre-master-binary=" "masterBinary"
 

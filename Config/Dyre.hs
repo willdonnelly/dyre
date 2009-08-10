@@ -119,7 +119,7 @@ defaultParams = Params
 --   entry point, which will then be called by the 'main' function, as well
 --   as by any custom configurations.
 wrapMain :: Params cfgType -> cfgType -> IO ()
-wrapMain params@Params{projectName = pName} cfg = withDyreOptions $ do
+wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $ do
     -- Allow the 'configCheck' parameter to disable all of Dyre's recompilation
     -- checks, in favor of simply proceeding ahead to the 'realMain' function.
     if not $ configCheck params
