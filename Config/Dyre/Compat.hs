@@ -11,6 +11,8 @@ import Config.Dyre.Options ( customOptions )
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 
+-- Windows
+
 import System.Win32
 import System.Process
 import System.Exit
@@ -53,12 +55,37 @@ foreign import stdcall unsafe "winbase.h ExitProcess"
 #else
 
 import System.Posix.Process ( executeFile, getProcessID )
+import System.Posix.Process ( forkProcess, exitImmediately, getProcessStatus, ProcessStatus(..) )
+import System.Posix.Signals ( raiseSignal, sigTSTP )
+import System.Exit          ( ExitCode(..) )
 
 getPIDString = fmap show getProcessID
 
+#ifdef darwin_HOST_OS
+
+-- OSX
+
 customExec binary mArgs = do
     args <- customOptions mArgs
-    executeFile binary False args Nothing
+    childPID <- forkProcess $ executeFile binary False args Nothing
+    forever $ do
+        childStatus <- getProcessStatus True True childPID
+        case childStatus of
+             Nothing -> error "executeFile: couldn't get child process status"
+             Just (Exited code) -> exitImmediately code
+             Just (Terminated _) -> exitImmediately ExitSuccess
+             Just (Stopped _) -> raiseSignal sigTSTP
+  where forever a = a >> forever a
+
+#else
+
+-- Linux / BSD
+
+customExec binary mArgs = do
+   args <- customOptions mArgs
+   executeFile binary False args Nothing
+
+#endif
 
 #endif
 
