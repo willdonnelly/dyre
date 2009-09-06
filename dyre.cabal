@@ -1,5 +1,5 @@
 name:          dyre
-version:       0.7.2
+version:       0.7.3
 category:      Development, Configuration
 synopsis:      Dynamic reconfiguration in Haskell
 

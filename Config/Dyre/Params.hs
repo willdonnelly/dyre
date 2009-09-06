@@ -36,6 +36,8 @@ data Params cfgType = Params
     -- ^ Packages that need to be hidden during compilation
     , ghcOpts      :: [String]
     -- ^ Miscellaneous GHC compilation settings go here
+    , forceRecomp  :: Bool
+    -- ^ Should GHC be given the -fforce-recomp flag?
     , statusOut    :: String -> IO ()
     -- ^ A status output function. Will be called with messages
     --   when Dyre recompiles or launches anything. A good value

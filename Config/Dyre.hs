@@ -111,6 +111,7 @@ defaultParams = Params
     , showError    = undefined
     , hidePackages = []
     , ghcOpts      = []
+    , forceRecomp  = True
     , statusOut    = hPutStrLn stderr
     }
 

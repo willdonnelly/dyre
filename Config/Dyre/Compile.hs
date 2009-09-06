@@ -49,12 +49,13 @@ customCompile params@Params{statusOut = output} = do
 
 -- | Assemble the arguments to GHC so everything compiles right.
 makeFlags :: Params cfgType -> FilePath -> FilePath -> FilePath -> IO [String]
-makeFlags Params{ghcOpts = flags, hidePackages = hides}
+makeFlags Params{ghcOpts = flags, hidePackages = hides, forceRecomp = force}
           cfgFile tmpFile cacheDir = do
     currentDir <- getCurrentDirectory
-    return . concat $ [ ["-v0", "-fforce-recomp", "-i" ++ currentDir]
+    return . concat $ [ ["-v0", "-i" ++ currentDir]
                       , ["-outputdir", cacheDir]
                       , prefix "-hide-package" hides, flags
                       , ["--make", cfgFile, "-o", tmpFile]
+                      , if force then ["-fforce-recomp"] else []
                       ]
   where prefix y xs = concat . map (\x -> [y,x]) $ xs
