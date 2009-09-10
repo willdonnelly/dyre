@@ -2,7 +2,7 @@
 Compiling the custom executable. The majority of the code actually
 deals with error handling, and not the compilation itself /per se/.
 -}
-module Config.Dyre.Compile ( customCompile ) where
+module Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString ) where
 
 import System.IO         ( openFile, hClose, IOMode(..) )
 import System.Exit       ( ExitCode(..) )
@@ -16,16 +16,35 @@ import GHC.Paths         ( ghc )
 import Config.Dyre.Paths  ( getPaths )
 import Config.Dyre.Params ( Params(..) )
 
+-- | Return the path to the error file.
+getErrorPath :: Params cfgType -> IO FilePath
+getErrorPath params = do
+    (_,_,_, cacheDir) <- getPaths params
+    return $ cacheDir </> "errors.log"
+
+-- | If the error file exists and actually has some contents, return
+--   'Just' the error string. Otherwise return 'Nothing'.
+getErrorString :: Params cfgType -> IO (Maybe String)
+getErrorString params = do
+    errorPath   <- getErrorPath params
+    errorsExist <- doesFileExist errorPath
+    if not errorsExist
+       then return Nothing
+       else do errorData <- readFile errorPath
+               if errorData == ""
+                  then return Nothing
+                  else return . Just $ errorData
+
 -- | Attempts to compile the configuration file. Will return a string
 --   containing any compiler output.
-customCompile :: Params cfgType -> IO (Maybe String)
+customCompile :: Params cfgType -> IO ()
 customCompile params@Params{statusOut = output} = do
     (thisBinary, tempBinary, configFile, cacheDir) <- getPaths params
     output $ "Configuration '" ++ configFile ++  "' changed. Recompiling."
     createDirectoryIfMissing True cacheDir
 
     -- Compile occurs in here
-    let errFile = cacheDir </> "errors.log"
+    errFile <- getErrorPath params
     result <- bracket (openFile errFile WriteMode) hClose $ \errHandle -> do
         ghcOpts <- makeFlags params configFile tempBinary cacheDir
         ghcProc <- runProcess ghc ghcOpts (Just cacheDir) Nothing
@@ -36,16 +55,6 @@ customCompile params@Params{statusOut = output} = do
     if result /= ExitSuccess
        then output $ "Error occurred while loading configuration file."
        else output $ "Program reconfiguration successful."
-
-    -- If the error file exists and actually has some contents, return
-    -- 'Just' the error string. Otherwise return 'Nothing'.
-    errorsExist <- doesFileExist errFile
-    if not errorsExist
-       then return Nothing
-       else do errors <- readFile errFile
-               if errors == ""
-                  then return Nothing
-                  else return . Just $ errors
 
 -- | Assemble the arguments to GHC so everything compiles right.
 makeFlags :: Params cfgType -> FilePath -> FilePath -> FilePath -> IO [String]
