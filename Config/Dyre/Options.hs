@@ -19,7 +19,8 @@ preserves the important flags with a call to 'customOptions'.
 module Config.Dyre.Options
   ( withDyreOptions
   , customOptions
-  , getReconf
+  , getDenyReconf
+  , getForceReconf
   , getDebug
   , getMasterBinary
   , getStatePersist
@@ -52,6 +53,7 @@ withDyreOptions Params{configCheck = check} action = withStore "dyre" $ do
     -- Load the other important arguments into IO storage.
     storeFlag args "--dyre-state-persist=" "persistState"
     putValue "dyre" "forceReconf"  $ "--force-reconf" `elem` args
+    putValue "dyre" "denyReconf"   $ "--deny-reconf"  `elem` args
     putValue "dyre" "debugMode"    $ "--dyre-debug"   `elem` args
 
     -- We filter the arguments, so now Dyre's arguments 'vanish'
@@ -61,8 +63,13 @@ withDyreOptions Params{configCheck = check} action = withStore "dyre" $ do
 
 -- | Get the value of the '--force-reconf' flag, which is used
 --   to force a recompile of the custom configuration.
-getReconf :: IO Bool
-getReconf = getDefaultValue "dyre" "forceReconf" False
+getForceReconf :: IO Bool
+getForceReconf = getDefaultValue "dyre" "forceReconf" False
+
+-- | Get the value of the '--deny-reconf' flag, which disables
+--   recompilation. This overrides "--force-reconf", too.
+getDenyReconf :: IO Bool
+getDenyReconf = getDefaultValue "dyre" "denyReconf" False
 
 -- | Get the value of the '--dyre-debug' flag, which is used
 --   to debug a program without installation. Specifically,
@@ -119,5 +126,6 @@ storeFlag args flag name
 -- | The array of all arguments that Dyre recognizes. Used to
 --   make sure none of them are visible past 'withDyreOptions'
 dyreArgs :: [String]
-dyreArgs = [ "--force-reconf", "--dyre-state-persist"
-           , "--dyre-debug", "--dyre-master-binary" ]
+dyreArgs = [ "--force-reconf", "--deny-reconf"
+           , "--dyre-state-persist", "--dyre-debug"
+           , "--dyre-master-binary" ]
