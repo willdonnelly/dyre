@@ -33,9 +33,9 @@ assert "$OUTPUT_B" "Basic Test Version 2.0 - 3" "B"
 sleep 1
 cp ../badConfig.hs basicTest.hs
 OUTPUT_C=`./basic --dyre-debug`
-assert "$OUTPUT_C" "Compile Error" "B"
+assert "$OUTPUT_C" "Compile Error" "C"
 
 ### TEARDOWN ###
-echo "All tests passed"
+echo "Passed"
 cd ..
 rm -r working
