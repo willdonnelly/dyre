@@ -85,12 +85,13 @@ behaviour on Windows platforms.
 module Config.Dyre ( wrapMain, Params(..), defaultParams ) where
 
 import System.IO           ( hPutStrLn, stderr )
-import System.Directory    ( doesFileExist )
+import System.Directory    ( doesFileExist, removeFile )
+import System.Environment  ( getArgs )
 
 import Config.Dyre.Params  ( Params(..) )
-import Config.Dyre.Compile ( customCompile )
+import Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString )
 import Config.Dyre.Compat  ( customExec )
-import Config.Dyre.Options ( getReconf, getDebug, withDyreOptions )
+import Config.Dyre.Options ( getForceReconf, getDenyReconf, getDebug, withDyreOptions )
 import Config.Dyre.Paths   ( getPaths, maybeModTime )
 
 -- | A set of reasonable defaults for configuring Dyre. If the minimal set of
@@ -134,14 +135,17 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $ do
         tempTime <- maybeModTime tempBinary
         confTime <- maybeModTime configFile
 
+        let confExists = confTime /= Nothing
+
         -- If there's a config file, and the temp binary is older than something
         -- else, or we were specially told to recompile, then we should recompile.
-        let confExists = confTime /= Nothing
-        forceReconf <- getReconf
-        errors <- if confExists &&
-                     (tempTime < confTime || tempTime < thisTime || forceReconf)
-                     then customCompile params
-                     else return Nothing
+        denyReconf  <- getDenyReconf
+        forceReconf <- getForceReconf
+
+        if not denyReconf && confExists &&
+           (tempTime < confTime || tempTime < thisTime || forceReconf)
+           then customCompile params
+           else return ()
 
         -- If there's a custom binary and we're not it, run it. Otherwise
         -- just launch the main function, reporting errors if appropriate.
@@ -149,8 +153,23 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $ do
         -- gone.
         customExists <- doesFileExist tempBinary
         if confExists && customExists && (thisBinary /= tempBinary)
-           then do statusOut params $ "Launching custom binary '" ++ tempBinary ++ "'\n"
-                   customExec tempBinary Nothing
-           else realMain params $ case errors of
-                                       Nothing -> cfg
-                                       Just er -> (showError params) cfg er
+           then launchSub params
+           else enterMain params
+  where launchSub params = do
+            (_, tempBinary, _, _) <- getPaths params
+            statusOut params $ "Launching custom binary " ++ tempBinary ++ "\n"
+            errors <- getErrorString params
+            args   <- getArgs
+            case errors of
+                 Nothing -> customExec tempBinary . Just $ args
+                 Just _  -> customExec tempBinary . Just $ "--deny-reconf":args
+        enterMain params = do
+            errorFile <- getErrorPath params
+            errorData <- getErrorString params
+            errorExists <- doesFileExist errorFile
+            let mainConfig = case errorData of
+                                  Nothing -> cfg
+                                  Just ed -> showError params cfg ed
+            if errorExists then removeFile errorFile
+                           else return ()
+            realMain params mainConfig
