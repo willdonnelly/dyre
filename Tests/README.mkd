@@ -1,0 +1,11 @@
+Dyre Test Suite
+===============
+
+It's hard to design an automated testing system which can cope with a
+program that recompiles itself on the fly, much less test the logic
+behind those recompilations.
+
+As a result, Dyre's tests are very high-level. They consist of a set of
+source files and a shell script which will compile and run the resulting
+binary. Test success is determined entirely based on the output of the
+programs.
