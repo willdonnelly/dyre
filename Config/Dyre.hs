@@ -144,25 +144,28 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $ do
         -- just launch the main function, reporting errors if appropriate.
         -- Also we don't want to use a custom binary if the conf file is
         -- gone.
+        errorData    <- getErrorString params
         customExists <- doesFileExist tempBinary
         if confExists && customExists && (thisBinary /= tempBinary)
-           then launchSub params
-           else enterMain params
-  where launchSub params = do
-            (_, tempBinary, _, _) <- getPaths params
+           then launchSub errorData tempBinary
+           else enterMain errorData
+  where launchSub errorData tempBinary = do
             statusOut params $ "Launching custom binary " ++ tempBinary ++ "\n"
-            errors <- getErrorString params
-            args   <- getArgs
-            case errors of
-                 Nothing -> customExec tempBinary . Just $ args
-                 Just _  -> customExec tempBinary . Just $ "--deny-reconf":args
-        enterMain params = do
-            errorFile <- getErrorPath params
-            errorData <- getErrorString params
-            errorExists <- doesFileExist errorFile
+            -- Deny reconfiguration if a compile already failed.
+            arguments <- case errorData of
+                Nothing -> getArgs
+                Just _  -> ("--deny-reconf":) `fmap` getArgs
+            -- Execute
+            customExec tempBinary $ Just arguments
+        enterMain errorData = do
+            -- Show the error data if necessary
             let mainConfig = case errorData of
                                   Nothing -> cfg
                                   Just ed -> showError params cfg ed
+            -- Remove the error file if it exists
+            errorFile <- getErrorPath params
+            errorExists <- doesFileExist errorFile
             if errorExists then removeFile errorFile
                            else return ()
+            -- Enter the main program
             realMain params mainConfig
