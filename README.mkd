@@ -16,15 +16,13 @@ into an entry-point function.
 A complete, working example can be seen here:
 
     -- DyreExample.hs --
-    module DyreExample ( dyreExample, Config(..), defaultConf ) where
+    module DyreExample ( dyreExample ) where
 
     import qualified Config.Dyre as Dyre
 
-    data Config = Config { message :: String }
-    defaultConf = Config "Hello, world!"
-    confError (Config message) error = Config $ "Error:" ++ error ++ "\n" ++ message
+    confError cfgMessage error = "Error:" ++ error ++ "\n" ++ cfgMessage
 
-    realMain (Config message) = do
+    realMain message = do
         putStrLn "Entered Main Function"
         putStrLn message
 
@@ -34,28 +32,53 @@ A complete, working example can be seen here:
         , Dyre.realMain     = realMain
         }
 
+This code defines a simple library which will display a message on stdout. It
+uses Dyre to provide configuration of what exactly the message is. The default
+configuration could look something like this:
+
     -- Main.hs --
     import DyreExample
-    main = dyreExample defaultConf
+    main = dyreExample "This is the default configuration"
 
-The function `dyreExample` which is obtained from the `wrapMain` function is the
-new program entry point. When called with a configuration, it will hand off the
-control to Dyre, which will proceed to recompile and run the custom configuration
-as needed. Eventually, the flow of control will pass back into the `realMain`
-function, at which time Dyre is completely out of the picture.
+While a user's custom configuration would be more like this:
+
+    -- dyreExample.hs --
+    import DyreExample
+    main = dyreExample "This is a custom configuration"
+
+This example can be run without installing. Simply run `Main.hs`[^1] with the
+argument '--dyre-debug', to tell it to search for a configuration file in the
+current directory. If the custom configuration exists, it will be compiled and
+executed, or the default message will be displayed if there is no custom
+configuration.
+
+The `Dyre.wrapMain` function is how Dyre is meant to be invoked. It is passed
+a set of parameters which configure how it operates. Most parameters have some
+good defaults defined in `Dyre.defaultParams`, except for the three defined in
+the above code. For a program to successfully run, those three parameters must
+be overridden.
+
+The `Dyre.projectName` element is used to search for a custom configuration, the
+`Dyre.showError` element is called with compile errors to store the information
+in the program configuration, and `Dyre.realMain` is the function which is
+ultimately the main program entry point.
+
+For the other parameters Dyre uses, consult the `Config.Dyre.Params` module
+documentation.
+
+[^1] You can compile it with `ghc --make`, or simply use `runhaskell Main.hs`.
 
 Restarting and Persistent State
 -------------------------------
 
-Restarting is handled by the `Config.Dyre.Relaunch` module. The important
-functions are the `relaunchWithState`, and `restoreState` functions. Together,
-they require that your state type be a member of the `Read` and `Show`
-typeclasses.
+Restarting is handled by the `Config.Dyre.Relaunch` module. To simply restart,
+discarding all state information, use the `relaunchMaster` function.
 
-State can be saved with the `relaunchWithState` function, which takes a state
-and an optional list of arguments. The master binary will be executed with the
-arguments after writing the state to disk.
+If the state needs to be preserved, there are two pairs of functions available.
+When your program starts, you will want to use ether the `restoreTextState` or
+the `restoreBinaryState` function. Both of these take a default state which is
+returned when there is no persisted state to use.
 
-State is restored with the `restoreState` function. The function takes a default
-state, which is returned when there is no state saved to disk, and should only
-be called once, as the state file is removed after that.
+Then to restart and persist the state, use the function `relaunchWithTextState`
+or `relaunchWithBinaryState` corresponding to your chosen restore function. The
+state will be persisted and your program restarted for you.
