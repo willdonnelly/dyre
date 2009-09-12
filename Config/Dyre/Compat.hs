@@ -1,5 +1,8 @@
 {-# LANGUAGE CPP #-}
+
+#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 {-# LANGUAGE ForeignFunctionInterface #-}
+#endif
 
 {- |
 Compatibility code for things that need to be done differently
@@ -54,8 +57,8 @@ foreign import stdcall unsafe "winbase.h ExitProcess"
 
 #else
 
-import System.Posix.Process ( executeFile, getProcessID )
-import System.Posix.Process ( forkProcess, exitImmediately, getProcessStatus, ProcessStatus(..) )
+import System.Posix.Process ( executeFile, getProcessID, exitImmediately
+                            , forkProcess, getProcessStatus, ProcessStatus(..) )
 import System.Posix.Signals ( raiseSignal, sigTSTP )
 import System.Exit          ( ExitCode(..) )
 

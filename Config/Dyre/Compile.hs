@@ -53,8 +53,8 @@ customCompile params@Params{statusOut = output} = do
 
     -- Display a helpful little status message
     if result /= ExitSuccess
-       then output $ "Error occurred while loading configuration file."
-       else output $ "Program reconfiguration successful."
+       then output "Error occurred while loading configuration file."
+       else output "Program reconfiguration successful."
 
 -- | Assemble the arguments to GHC so everything compiles right.
 makeFlags :: Params cfgType -> FilePath -> FilePath -> FilePath -> IO [String]
@@ -65,6 +65,6 @@ makeFlags Params{ghcOpts = flags, hidePackages = hides, forceRecomp = force}
                       , ["-outputdir", cacheDir]
                       , prefix "-hide-package" hides, flags
                       , ["--make", cfgFile, "-o", tmpFile]
-                      , if force then ["-fforce-recomp"] else []
+                      , ["-fforce-recomp" | force] -- Only if force is true
                       ]
-  where prefix y xs = concat . map (\x -> [y,x]) $ xs
+  where prefix y = concatMap $ \x -> [y,x]

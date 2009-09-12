@@ -87,6 +87,8 @@ import System.IO           ( hPutStrLn, stderr )
 import System.Directory    ( doesFileExist, removeFile )
 import System.Environment  ( getArgs )
 
+import Control.Monad       ( when )
+
 import Config.Dyre.Params  ( Params(..) )
 import Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString )
 import Config.Dyre.Compat  ( customExec )
@@ -114,7 +116,7 @@ defaultParams = Params
 --   entry point, which will then be called by the 'main' function, as well
 --   as by any custom configurations.
 wrapMain :: Params cfgType -> cfgType -> IO ()
-wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $ do
+wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $
     -- Allow the 'configCheck' parameter to disable all of Dyre's recompilation
     -- checks, in favor of simply proceeding ahead to the 'realMain' function.
     if not $ configCheck params
@@ -127,18 +129,20 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $ do
         thisTime <- maybeModTime thisBinary
         tempTime <- maybeModTime tempBinary
         confTime <- maybeModTime configFile
-
         let confExists = confTime /= Nothing
 
-        -- If there's a config file, and the temp binary is older than something
-        -- else, or we were specially told to recompile, then we should recompile.
         denyReconf  <- getDenyReconf
         forceReconf <- getForceReconf
+        -- Either the user or timestamps indicate we need to recompile
+        let needReconf = or [ tempTime < confTime
+                            , tempTime < thisTime
+                            , forceReconf
+                            ]
 
-        if not denyReconf && confExists &&
-           (tempTime < confTime || tempTime < thisTime || forceReconf)
-           then customCompile params
-           else return ()
+        -- If we're allowed to reconfigure, a configuration exists, and
+        -- we detect a need to recompile it, then go ahead and compile.
+        when (not denyReconf && confExists && needReconf)
+             (customCompile params)
 
         -- If there's a custom binary and we're not it, run it. Otherwise
         -- just launch the main function, reporting errors if appropriate.
@@ -165,7 +169,6 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $ do
             -- Remove the error file if it exists
             errorFile <- getErrorPath params
             errorExists <- doesFileExist errorFile
-            if errorExists then removeFile errorFile
-                           else return ()
+            when errorExists $ removeFile errorFile
             -- Enter the main program
             realMain params mainConfig

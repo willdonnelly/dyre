@@ -1,2 +1,2 @@
 import BasicTest
-main = basicTest $ defaultConfig { message = "Basic Test Version 3.0 }
+main = basicTest $ defaultConfig { massage = "Basic Test Version 3.0" }

@@ -111,7 +111,7 @@ customOptions otherArgs = do
                         , case stateFile of
                                Nothing -> ""
                                Just sf -> "--dyre-state-persist=" ++ sf
-                        , "--dyre-master-binary=" ++ (fromJust masterPath)
+                        , "--dyre-master-binary=" ++ fromJust masterPath
                         ]
     return args
 

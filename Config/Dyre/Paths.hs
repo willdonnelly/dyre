@@ -22,12 +22,12 @@ getPaths params@Params{projectName = pName} = do
                       (False, Nothing) -> getUserCacheDir pName
                       (False, Just cd) -> cd
     configDir <- case (debugMode, configDir params) of
-                      (True,  _      ) -> return $ cwd
+                      (True,  _      ) -> return cwd
                       (False, Nothing) -> getUserConfigDir pName
                       (False, Just cd) -> cd
     let tempBinary = cacheDir </> pName ++ "-" ++ os ++ "-" ++ arch
     let configFile = configDir </> pName ++ ".hs"
-    return $ (thisBinary, tempBinary, configFile, cacheDir)
+    return (thisBinary, tempBinary, configFile, cacheDir)
 
 -- | Check if a file exists. If it exists, return Just the modification
 --   time. If it doesn't exist, return Nothing.

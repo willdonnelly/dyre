@@ -3,6 +3,7 @@ module BasicTest where
 import qualified Config.Dyre as Dyre
 
 import Config.Dyre.Relaunch
+import Control.Monad
 import System.IO
 
 data Config = Config { message :: String, errorMsg :: Maybe String }
@@ -13,15 +14,11 @@ defaultConfig = Config "Basic Test Version 1.0" Nothing
 showError :: Config -> String -> Config
 showError cfg msg = cfg { errorMsg = Just msg }
 
-realMain Config{message = message, errorMsg = errorMsg } = do
-    case errorMsg of
-         Just em -> putStrLn "Compile Error"
-         Nothing -> do
-            state <- restoreTextState 1
-            if state < 3
-               then relaunchWithTextState (state + 1) Nothing
-               else return ()
-            putStrLn $ message ++ " - " ++ show state
+realMain (Config message (Just err)) = putStrLn "Compile Error"
+realMain (Config message Nothing) = do
+    state <- restoreTextState 1
+    when (state < 3) $ relaunchWithTextState (state + 1) Nothing
+    putStrLn $ message ++ " - " ++ show state
 
 basicTest = Dyre.wrapMain $ Dyre.defaultParams
     { Dyre.projectName = "basicTest"
