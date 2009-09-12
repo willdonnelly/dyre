@@ -23,6 +23,16 @@ license-file:  LICENSE
 build-type:    Simple
 cabal-version: >= 1.6
 
+extra-source-files:
+    Tests/README.mkd
+    Tests/allTests.sh
+    Tests/basic/*.hs
+    Tests/basic/*.sh
+    Tests/config-check/*.hs
+    Tests/config-check/*.sh
+    Tests/recompile-relaunch/*.hs
+    Tests/recompile-relaunch/*.sh
+
 library
   exposed-modules: Config.Dyre,
                    Config.Dyre.Paths,
