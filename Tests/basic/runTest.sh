@@ -8,6 +8,7 @@
 
 # Assert the equality of two strings.
 function assert() {
+    echo "$1" >&2
     if [ "$1" != "$2" ]; then
         echo "Failed test $3";
         exit 1;
