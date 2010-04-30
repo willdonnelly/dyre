@@ -1,8 +1,5 @@
 {-# LANGUAGE CPP #-}
-
-#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
 {-# LANGUAGE ForeignFunctionInterface #-}
-#endif
 
 {- |
 Compatibility code for things that need to be done differently
