@@ -65,6 +65,13 @@ essentially just the default configuration for the program:
 >    import DyreExample
 >    main = dyreExample defaultConfig
 
+The user can then create a custom configuration file, which
+overrides some or all of the default configuration:
+
+>    -- ~/.config/dyreExample/dyreExample.hs --
+>    import DyreExample
+>    main = dyreExample $ defaultConfig { message = "Dyre Example v0.1 (Modified)" }
+
 When reading the above program, notice that the majority of the
 code is simply *program logic*. Dyre is designed to intelligently
 handle recompilation with a minimum of programmer work.
@@ -80,6 +87,11 @@ files in '$XDG_CONFIG_HOME/<appName>/<appName>.hs', and will store
 cache files in '$XDG_CACHE_HOME/<appName>/' directory. The module
 'System.Environment.XDG' is used for this purpose, which also provides
 analogous behaviour on Windows.
+
+The above example can be tested by running Main.hs with 'runhaskell',
+and will detect custom configurations and recompile correctly even when
+the library isn't installed, so long as it is in the current directory
+when run.
 -}
 module Config.Dyre ( wrapMain, Params(..), defaultParams ) where
 
