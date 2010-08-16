@@ -1,5 +1,5 @@
 name:          dyre
-version:       0.8.4
+version:       0.8.5
 category:      Development, Configuration
 synopsis:      Dynamic reconfiguration in Haskell
 
@@ -13,10 +13,10 @@ description:   Dyre implements dynamic reconfiguration facilities after the
 
 homepage:      http://github.com/willdonnelly/dyre
 bug-reports:   http://github.com/willdonnelly/dyre/issues
-stability:     alpha
+stability:     beta
 author:        Will Donnelly
 maintainer:    Will Donnelly <will.donnelly@gmail.com>
-copyright:     (c) 2009 Will Donnelly
+copyright:     (c) 2010 Will Donnelly
 license:       BSD3
 license-file:  LICENSE
 

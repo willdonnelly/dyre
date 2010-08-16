@@ -96,7 +96,7 @@ when run.
 module Config.Dyre ( wrapMain, Params(..), defaultParams ) where
 
 import System.IO           ( hPutStrLn, stderr )
-import System.Directory    ( doesFileExist, removeFile )
+import System.Directory    ( doesFileExist, removeFile, canonicalizePath )
 import System.Environment  ( getArgs )
 
 import Control.Monad       ( when )
@@ -162,7 +162,14 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $
         -- gone.
         errorData    <- getErrorString params
         customExists <- doesFileExist tempBinary
-        if confExists && customExists && (thisBinary /= tempBinary)
+
+        -- Canonicalize the paths for comparison to avoid symlinks throwing
+        -- us off. We do it here instead of earlier because canonicalizePath
+        -- drops path components when one of them is nonexistent.
+        thisBinary' <- canonicalizePath thisBinary
+        tempBinary' <- canonicalizePath tempBinary
+
+        if confExists && customExists && (thisBinary' /= tempBinary')
            then launchSub errorData tempBinary
            else enterMain errorData
   where launchSub errorData tempBinary = do

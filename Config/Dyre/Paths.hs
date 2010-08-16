@@ -28,9 +28,7 @@ getPaths params@Params{projectName = pName} = do
     let tempBinary = cacheDir </> pName ++ "-" ++ os ++ "-" ++ arch
     let configFile = configDir </> pName ++ ".hs"
 
-    thisBinary' <- canonicalizePath thisBinary
-    tempBinary' <- canonicalizePath tempBinary
-    return (thisBinary', tempBinary', configFile, cacheDir)
+    return (thisBinary, tempBinary, configFile, cacheDir)
 
 -- | Check if a file exists. If it exists, return Just the modification
 --   time. If it doesn't exist, return Nothing.
