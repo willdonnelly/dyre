@@ -185,9 +185,5 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $
             let mainConfig = case errorData of
                                   Nothing -> cfg
                                   Just ed -> showError params cfg ed
-            -- Remove the error file if it exists
-            errorFile <- getErrorPath params
-            errorExists <- doesFileExist errorFile
-            when errorExists $ removeFile errorFile
             -- Enter the main program
             realMain params mainConfig

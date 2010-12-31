@@ -26,6 +26,7 @@ getPaths params@Params{projectName = pName} = do
                       (False, Nothing) -> getUserConfigDir pName
                       (False, Just cd) -> cd
     let tempBinary = cacheDir </> pName ++ "-" ++ os ++ "-" ++ arch
+                              <.> takeExtension thisBinary
     let configFile = configDir </> pName ++ ".hs"
 
     return (thisBinary, tempBinary, configFile, cacheDir)
