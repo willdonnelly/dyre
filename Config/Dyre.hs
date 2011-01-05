@@ -96,15 +96,18 @@ when run.
 module Config.Dyre ( wrapMain, Params(..), defaultParams ) where
 
 import System.IO           ( hPutStrLn, stderr )
-import System.Directory    ( doesFileExist, removeFile, canonicalizePath )
+import System.Directory    ( doesFileExist, removeFile, canonicalizePath
+                           , getDirectoryContents, doesDirectoryExist )
+import System.FilePath     ( (</>) )
 import System.Environment  ( getArgs )
 
-import Control.Monad       ( when )
+import Control.Monad       ( when, filterM )
 
 import Config.Dyre.Params  ( Params(..) )
 import Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString )
 import Config.Dyre.Compat  ( customExec )
-import Config.Dyre.Options ( getForceReconf, getDenyReconf, getDebug, withDyreOptions )
+import Config.Dyre.Options ( getForceReconf, getDenyReconf, getDebug
+                           , withDyreOptions )
 import Config.Dyre.Paths   ( getPaths, maybeModTime )
 
 -- | A set of reasonable defaults for configuring Dyre. The fields that
@@ -135,7 +138,9 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $
        then realMain params cfg
        else do
         -- Get the important paths
-        (thisBinary, tempBinary, configFile, cacheDir) <- getPaths params
+        (thisBinary,tempBinary,configFile,cacheDir,libsDir) <- getPaths params
+        libFiles <- recFiles libsDir
+        libTimes <- mapM maybeModTime libFiles
 
         -- Check their modification times
         thisTime <- maybeModTime thisBinary
@@ -148,6 +153,7 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $
         -- Either the user or timestamps indicate we need to recompile
         let needReconf = or [ tempTime < confTime
                             , tempTime < thisTime
+                            , or . map (tempTime <) $ libTimes
                             , forceReconf
                             ]
 
@@ -190,3 +196,16 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $
                                   Just ed -> showError params cfg ed
             -- Enter the main program
             realMain params mainConfig
+
+recFiles :: FilePath -> IO [FilePath]
+recFiles d = do
+    exists <- doesDirectoryExist d
+    if exists
+       then do
+           nodes <- getDirectoryContents d
+           let nodes' = map (d </>) . filter (`notElem` [".", ".."]) $ nodes
+           files <- filterM doesFileExist nodes'
+           dirs  <- filterM doesDirectoryExist nodes'
+           subfiles <- concat `fmap` mapM recFiles dirs
+           return $ files ++ subfiles
+       else return []

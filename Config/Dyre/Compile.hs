@@ -19,7 +19,7 @@ import Config.Dyre.Params ( Params(..) )
 -- | Return the path to the error file.
 getErrorPath :: Params cfgType -> IO FilePath
 getErrorPath params = do
-    (_,_,_, cacheDir) <- getPaths params
+    (_,_,_, cacheDir, _) <- getPaths params
     return $ cacheDir </> "errors.log"
 
 -- | If the error file exists and actually has some contents, return
@@ -39,14 +39,14 @@ getErrorString params = do
 --   containing any compiler output.
 customCompile :: Params cfgType -> IO ()
 customCompile params@Params{statusOut = output} = do
-    (thisBinary, tempBinary, configFile, cacheDir) <- getPaths params
+    (thisBinary, tempBinary, configFile, cacheDir, libsDir) <- getPaths params
     output $ "Configuration '" ++ configFile ++  "' changed. Recompiling."
     createDirectoryIfMissing True cacheDir
 
     -- Compile occurs in here
     errFile <- getErrorPath params
     result <- bracket (openFile errFile WriteMode) hClose $ \errHandle -> do
-        ghcOpts <- makeFlags params configFile tempBinary cacheDir
+        ghcOpts <- makeFlags params configFile tempBinary cacheDir libsDir
         ghcProc <- runProcess ghc ghcOpts (Just cacheDir) Nothing
                               Nothing Nothing (Just errHandle)
         waitForProcess ghcProc
@@ -57,11 +57,12 @@ customCompile params@Params{statusOut = output} = do
        else output "Program reconfiguration successful."
 
 -- | Assemble the arguments to GHC so everything compiles right.
-makeFlags :: Params cfgType -> FilePath -> FilePath -> FilePath -> IO [String]
+makeFlags :: Params cfgType -> FilePath -> FilePath -> FilePath
+          -> FilePath -> IO [String]
 makeFlags Params{ghcOpts = flags, hidePackages = hides, forceRecomp = force}
-          cfgFile tmpFile cacheDir = do
+          cfgFile tmpFile cacheDir libsDir = do
     currentDir <- getCurrentDirectory
-    return . concat $ [ ["-v0", "-i" ++ currentDir]
+    return . concat $ [ ["-v0", "-i" ++ currentDir, "-i" ++ libsDir]
                       , ["-outputdir", cacheDir]
                       , prefix "-hide-package" hides, flags
                       , ["--make", cfgFile, "-o", tmpFile]

@@ -12,7 +12,7 @@ import Config.Dyre.Options
 
 -- | Return the paths to, respectively, the current binary, the custom
 --   binary, the config file, and the cache directory.
-getPaths :: Params c -> IO (FilePath, FilePath, FilePath, FilePath)
+getPaths :: Params c -> IO (FilePath, FilePath, FilePath, FilePath, FilePath)
 getPaths params@Params{projectName = pName} = do
     thisBinary <- getExecutablePath
     debugMode  <- getDebug
@@ -28,8 +28,8 @@ getPaths params@Params{projectName = pName} = do
     let tempBinary = cacheDir </> pName ++ "-" ++ os ++ "-" ++ arch
                               <.> takeExtension thisBinary
     let configFile = configDir </> pName ++ ".hs"
-
-    return (thisBinary, tempBinary, configFile, cacheDir)
+    let libsDir = configDir </> "lib"
+    return (thisBinary, tempBinary, configFile, cacheDir, libsDir)
 
 -- | Check if a file exists. If it exists, return Just the modification
 --   time. If it doesn't exist, return Nothing.
