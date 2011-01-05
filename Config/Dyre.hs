@@ -163,14 +163,17 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $
         errorData    <- getErrorString params
         customExists <- doesFileExist tempBinary
 
-        -- Canonicalize the paths for comparison to avoid symlinks throwing
-        -- us off. We do it here instead of earlier because canonicalizePath
-        -- drops path components when one of them is nonexistent.
-        thisBinary' <- canonicalizePath thisBinary
-        tempBinary' <- canonicalizePath tempBinary
-
-        if confExists && customExists && (thisBinary' /= tempBinary')
-           then launchSub errorData tempBinary
+        if confExists && customExists
+           then do
+               -- Canonicalize the paths for comparison to avoid symlinks
+               -- throwing us off. We do it here instead of earlier because
+               -- canonicalizePath throws an exception when the file is
+               -- nonexistent.
+               thisBinary' <- canonicalizePath thisBinary
+               tempBinary' <- canonicalizePath tempBinary
+               if thisBinary' /= tempBinary'
+                  then launchSub errorData tempBinary
+                  else enterMain errorData
            else enterMain errorData
   where launchSub errorData tempBinary = do
             statusOut params $ "Launching custom binary " ++ tempBinary ++ "\n"
