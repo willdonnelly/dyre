@@ -38,6 +38,7 @@ customExec binary mArgs = do
         , std_out   = Inherit
         , std_err   = Inherit
         , close_fds = True
+        , create_group = False
         }
     -- Do some garbage collection in an optimistic attempt to
     -- offset some of the memory we waste here.
