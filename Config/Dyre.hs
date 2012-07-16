@@ -99,11 +99,13 @@ import System.IO           ( hPutStrLn, stderr )
 import System.Directory    ( doesFileExist, removeFile, canonicalizePath
                            , getDirectoryContents, doesDirectoryExist )
 import System.FilePath     ( (</>) )
-import System.Environment  ( getArgs )
+import System.Environment  (getArgs)
+import GHC.Environment     (getFullArgs)
+import Control.Exception   (assert)
 
 import Control.Monad       ( when, filterM )
 
-import Config.Dyre.Params  ( Params(..) )
+import Config.Dyre.Params  ( Params(..), RTSOptionHandling(..) )
 import Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString )
 import Config.Dyre.Compat  ( customExec )
 import Config.Dyre.Options ( getForceReconf, getDenyReconf, getDebug
@@ -124,6 +126,7 @@ defaultParams = Params
     , ghcOpts      = []
     , forceRecomp  = True
     , statusOut    = hPutStrLn stderr
+    , rtsOptsHandling = RTSAppend []
     }
 
 -- | 'wrapMain' is how Dyre recieves control of the program. It is expected
@@ -183,10 +186,11 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $
            else enterMain errorData
   where launchSub errorData tempBinary = do
             statusOut params $ "Launching custom binary " ++ tempBinary ++ "\n"
+            givenArgs <- handleRTSOptions $ rtsOptsHandling params
             -- Deny reconfiguration if a compile already failed.
-            arguments <- case errorData of
-                Nothing -> getArgs
-                Just _  -> ("--deny-reconf":) `fmap` getArgs
+            let arguments = case errorData of
+                              Nothing -> givenArgs
+                              Just _  -> "--deny-reconf":givenArgs
             -- Execute
             customExec tempBinary $ Just arguments
         enterMain errorData = do
@@ -209,3 +213,30 @@ recFiles d = do
            subfiles <- concat `fmap` mapM recFiles dirs
            return $ files ++ subfiles
        else return []
+
+assertM b = assert b $ return ()
+
+-- | Filters GHC runtime system arguments:
+filterRTSArgs = filt False
+  where
+    filt _     []             = []
+    filt _     ("--RTS":rest) = []
+    filt False ("+RTS" :rest) = filt True  rest
+    filt True  ("-RTS" :rest) = filt False rest
+    filt False (_      :rest) = filt False rest
+    filt True  (arg    :rest) = arg:filt True rest
+    --filt state args           = error $ "Error filtering RTS arguments in state " ++ show state ++ " remaining arguments: " ++ show args
+
+editRTSOptions opts (RTSReplace ls) = ls
+editRTSOptions opts (RTSAppend ls)  = opts ++ ls
+
+handleRTSOptions h = do fargs <- getFullArgs
+                        args  <- getArgs
+                        let rtsArgs = editRTSOptions (filterRTSArgs fargs) h
+                        assertM $ not $ "--RTS" `elem` rtsArgs
+                        case rtsArgs of
+                          [] -> if not $ "+RTS" `elem` args
+                                  then return args -- cleaner output
+                                  else return $ "--RTS":args
+                          _  -> return $ ["+RTS"] ++ rtsArgs ++ ["--RTS"] ++ args
+
