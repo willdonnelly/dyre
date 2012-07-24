@@ -127,6 +127,7 @@ defaultParams = Params
     , forceRecomp  = True
     , statusOut    = hPutStrLn stderr
     , rtsOptsHandling = RTSAppend []
+    , includeCurrentDirectory = True
     }
 
 -- | 'wrapMain' is how Dyre recieves control of the program. It is expected

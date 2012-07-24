@@ -59,13 +59,17 @@ customCompile params@Params{statusOut = output} = do
 -- | Assemble the arguments to GHC so everything compiles right.
 makeFlags :: Params cfgType -> FilePath -> FilePath -> FilePath
           -> FilePath -> IO [String]
-makeFlags Params{ghcOpts = flags, hidePackages = hides, forceRecomp = force}
+makeFlags Params{ghcOpts = flags, hidePackages = hides, forceRecomp = force, includeCurrentDirectory = includeCurDir}
           cfgFile tmpFile cacheDir libsDir = do
     currentDir <- getCurrentDirectory
-    return . concat $ [ ["-v0", "-i" ++ currentDir, "-i" ++ libsDir]
+    return . concat $ [ ["-v0", "-i" ++ libsDir]
+                      , if includeCurDir
+                          then ["-i" ++ currentDir]
+                          else [] 
                       , ["-outputdir", cacheDir]
                       , prefix "-hide-package" hides, flags
                       , ["--make", cfgFile, "-o", tmpFile]
                       , ["-fforce-recomp" | force] -- Only if force is true
                       ]
   where prefix y = concatMap $ \x -> [y,x]
+

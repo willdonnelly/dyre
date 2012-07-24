@@ -46,6 +46,9 @@ data Params cfgType = Params
     , rtsOptsHandling :: RTSOptionHandling
     -- ^ Whether to append, or replace GHC runtime system options
     --   with others.
+    , includeCurrentDirectory :: Bool
+    -- ^ Whether to add current directory to include list (set False to
+    --   prevent name shadowing within project directory.)  --
     }
 
 data RTSOptionHandling = RTSReplace [String] -- replaces RTS options with given list
