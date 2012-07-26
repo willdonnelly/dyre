@@ -17,7 +17,8 @@ control over to a new binary, it gets an argument list which
 preserves the important flags with a call to 'customOptions'.
 -}
 module Config.Dyre.Options
-  ( withDyreOptions
+  ( removeDyreOptions
+  , withDyreOptions
   , customOptions
   , getDenyReconf
   , getForceReconf
@@ -33,6 +34,11 @@ import System.Environment
 import System.Environment.Executable
 
 import Config.Dyre.Params
+
+-- | Remove all Dyre's options from the given commandline arguments.
+removeDyreOptions :: [String] -> [String]
+removeDyreOptions = filter $ not . prefixElem dyreArgs
+  where prefixElem xs = or . zipWith ($) (map isPrefixOf xs) . repeat
 
 -- | Store Dyre's command-line options to the IO-Store "dyre",
 --   and then execute the provided IO action with all Dyre's
@@ -57,9 +63,7 @@ withDyreOptions Params{configCheck = check} action = withStore "dyre" $ do
     putValue "dyre" "debugMode"    $ "--dyre-debug"   `elem` args
 
     -- We filter the arguments, so now Dyre's arguments 'vanish'
-    withArgs (filterArgs args) action
-  where filterArgs = filter $ not . prefixElem dyreArgs
-        prefixElem xs = or . zipWith ($) (map isPrefixOf xs) . repeat
+    withArgs (removeDyreOptions args) action
 
 -- | Get the value of the '--force-reconf' flag, which is used
 --   to force a recompile of the custom configuration.
