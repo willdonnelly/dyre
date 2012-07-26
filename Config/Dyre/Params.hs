@@ -3,7 +3,7 @@ Defines the 'Params' datatype which Dyre uses to define all
 program-specific configuration data. Shouldn't be imported
 directly, as 'Config.Dyre' re-exports it.
 -}
-module Config.Dyre.Params ( Params(..) ) where
+module Config.Dyre.Params ( Params(..), RTSOptionHandling(..) ) where
 
 -- | This structure is how all kinds of useful data is fed into Dyre. Of
 --   course, only the 'projectName', 'realMain', and 'showError' fields
@@ -43,4 +43,14 @@ data Params cfgType = Params
     --   when Dyre recompiles or launches anything. A good value
     --   is 'hPutStrLn stderr', assuming there is no pressing
     --   reason to not put messages on stderr.
+    , rtsOptsHandling :: RTSOptionHandling
+    -- ^ Whether to append, or replace GHC runtime system options
+    --   with others.
+    , includeCurrentDirectory :: Bool
+    -- ^ Whether to add current directory to include list (set False to
+    --   prevent name shadowing within project directory.)  --
     }
+
+data RTSOptionHandling = RTSReplace [String] -- replaces RTS options with given list
+                       | RTSAppend  [String] -- merges given list with RTS options from command line (so that nothing is lost)
+
