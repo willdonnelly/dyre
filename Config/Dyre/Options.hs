@@ -110,13 +110,13 @@ customOptions otherArgs = do
                      Nothing -> getArgs
                      Just oa -> return oa
     -- Combine the other arguments with the Dyre-specific ones
-    let args = filter (not . null) $
-            mainArgs ++ [ if debugMode then "--dyre-debug" else ""
-                        , case stateFile of
-                               Nothing -> ""
-                               Just sf -> "--dyre-state-persist=" ++ sf
-                        , "--dyre-master-binary=" ++ fromJust masterPath
-                        ]
+    let args = mainArgs ++ (filter (not . null) $
+            [ if debugMode then "--dyre-debug" else ""
+            , case stateFile of
+                   Nothing -> ""
+                   Just sf -> "--dyre-state-persist=" ++ sf
+            , "--dyre-master-binary=" ++ fromJust masterPath
+            ])
     return args
 
 -- | Look for the given flag in the argument array, and store
