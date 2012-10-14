@@ -4,7 +4,7 @@ import System.Info                    (os, arch)
 import System.FilePath                ( (</>), (<.>), takeExtension )
 import System.Directory               (getCurrentDirectory, doesFileExist, getModificationTime)
 import System.Environment.XDG.BaseDir (getUserCacheDir, getUserConfigDir)
-import System.Environment             (getExecutablePath)
+import System.Environment.Executable  (getExecutablePath)
 import Data.Time
 
 import Config.Dyre.Params

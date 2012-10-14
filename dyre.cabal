@@ -1,5 +1,5 @@
 name:          dyre
-version:       0.8.9
+version:       0.8.10
 category:      Development, Configuration
 synopsis:      Dynamic reconfiguration in Haskell
 
@@ -43,7 +43,7 @@ library
                    Config.Dyre.Relaunch
   build-depends:   base >= 4 && < 5, process, filepath,
                    directory, ghc-paths, time, binary,
-                   xdg-basedir, io-storage
+                   executable-path, xdg-basedir, io-storage
 
   if os(windows)
       build-depends: Win32
