@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 {-
 This is the only other module aside from 'Config.Dyre' which needs
 to be imported specially. It contains functions for restarting the
@@ -31,7 +33,7 @@ module Config.Dyre.Relaunch
 import Data.Maybe           ( fromMaybe, fromJust )
 import System.IO            ( writeFile, readFile )
 import Data.Binary          ( Binary, encodeFile, decodeFile )
-import System.IO.Error      ( try )
+import Control.Exception    ( try, SomeException )
 import System.FilePath      ( (</>) )
 import System.Directory     ( getTemporaryDirectory, removeFile )
 
@@ -101,8 +103,8 @@ restoreTextState d = do
              stateData <- readFile sp
              result <- try $ readIO stateData
              case result of
-                  Left  _ -> return d
-                  Right v -> return v
+                  Left  (_ :: SomeException) -> return d
+                  Right                    v -> return v
 
 -- | Restore state which has been serialized through the
 --   'saveBinaryState' function. Takes a default which is

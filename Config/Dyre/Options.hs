@@ -27,11 +27,10 @@ module Config.Dyre.Options
   , getStatePersist
   ) where
 
-import Data.List
-import Data.Maybe
-import System.IO.Storage
-import System.Environment
-import System.Environment.Executable
+import Data.List          (isPrefixOf)
+import Data.Maybe         (fromJust)
+import System.IO.Storage  (withStore, putValue, getValue, getDefaultValue)
+import System.Environment (getArgs, getExecutablePath, getProgName, withArgs)
 
 import Config.Dyre.Params
 

@@ -1,11 +1,11 @@
 module Config.Dyre.Paths where
 
-import System.Info
-import System.Time
-import System.FilePath
-import System.Directory
-import System.Environment.Executable
-import System.Environment.XDG.BaseDir
+import System.Info                    (os, arch)
+import System.FilePath                ( (</>), (<.>), takeExtension )
+import System.Directory               (getCurrentDirectory, doesFileExist, getModificationTime)
+import System.Environment.XDG.BaseDir (getUserCacheDir, getUserConfigDir)
+import System.Environment             (getExecutablePath)
+import Data.Time
 
 import Config.Dyre.Params
 import Config.Dyre.Options
@@ -33,7 +33,7 @@ getPaths params@Params{projectName = pName} = do
 
 -- | Check if a file exists. If it exists, return Just the modification
 --   time. If it doesn't exist, return Nothing.
-maybeModTime :: FilePath -> IO (Maybe ClockTime)
+maybeModTime :: FilePath -> IO (Maybe UTCTime)
 maybeModTime path = do
     fileExists <- doesFileExist path
     if fileExists
