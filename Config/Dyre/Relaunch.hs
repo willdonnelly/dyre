@@ -18,6 +18,7 @@ are much easier to use thanks to automatic deriving, but the
 binary versions offer more control over saving and loading, as
 well as probably being a bit faster.
 -}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Config.Dyre.Relaunch
   ( relaunchMaster
   , relaunchWithTextState
@@ -28,10 +29,10 @@ module Config.Dyre.Relaunch
   , restoreBinaryState
   ) where
 
+import Control.Exception      ( try )
 import Data.Maybe           ( fromMaybe, fromJust )
 import System.IO            ( writeFile, readFile )
 import Data.Binary          ( Binary, encodeFile, decodeFile )
-import System.IO.Error      ( try )
 import System.FilePath      ( (</>) )
 import System.Directory     ( getTemporaryDirectory, removeFile )
 
@@ -101,7 +102,7 @@ restoreTextState d = do
              stateData <- readFile sp
              result <- try $ readIO stateData
              case result of
-                  Left  _ -> return d
+                  Left  (_ :: IOError) -> return d
                   Right v -> return v
 
 -- | Restore state which has been serialized through the
