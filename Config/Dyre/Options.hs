@@ -31,7 +31,6 @@ import Data.List
 import Data.Maybe
 import System.IO.Storage
 import System.Environment
-import System.Environment.Executable
 
 import Config.Dyre.Params
 
