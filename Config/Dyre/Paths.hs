@@ -33,9 +33,10 @@ getPaths params@Params{projectName = pName} = do
 
 -- | Check if a file exists. If it exists, return Just the modification
 --   time. If it doesn't exist, return Nothing.
-maybeModTime :: FilePath -> IO (Maybe UTCTime)
 maybeModTime path = do
     fileExists <- doesFileExist path
     if fileExists
        then fmap Just $ getModificationTime path
        else return Nothing
+-- Removed type signature because it can't satisfy GHC 7.4 and 7.6 at once
+-- maybeModTime :: FilePath -> IO (Maybe UTCTime)
