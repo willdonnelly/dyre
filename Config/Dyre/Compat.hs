@@ -74,7 +74,11 @@ customExec binary mArgs = do
         case childStatus of
              Nothing -> error "executeFile: couldn't get child process status"
              Just (Exited code) -> exitImmediately code
+#if MIN_VERSION_unix(2,7,0)
+             Just (Terminated _ _) -> exitImmediately ExitSuccess
+#else
              Just (Terminated _) -> exitImmediately ExitSuccess
+#endif
              Just (Stopped _) -> raiseSignal sigTSTP
   where forever a = a >> forever a
 
