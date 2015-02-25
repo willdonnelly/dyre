@@ -11,7 +11,6 @@ import System.FilePath   ( (</>) )
 import System.Directory  ( getCurrentDirectory, doesFileExist
                          , createDirectoryIfMissing )
 import Control.Exception ( bracket )
-import GHC.Paths         ( ghc )
 
 import Config.Dyre.Paths  ( getPaths )
 import Config.Dyre.Params ( Params(..) )
@@ -47,7 +46,7 @@ customCompile params@Params{statusOut = output} = do
     errFile <- getErrorPath params
     result <- bracket (openFile errFile WriteMode) hClose $ \errHandle -> do
         ghcOpts <- makeFlags params configFile tempBinary cacheDir libsDir
-        ghcProc <- runProcess ghc ghcOpts (Just cacheDir) Nothing
+        ghcProc <- runProcess "ghc" ghcOpts (Just cacheDir) Nothing
                               Nothing Nothing (Just errHandle)
         waitForProcess ghcProc
 
