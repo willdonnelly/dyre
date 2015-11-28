@@ -7,7 +7,7 @@
 # Tests compilation error reporting.
 
 # Assert the equality of two strings.
-function assert() {
+assert() {
     echo "$1" >&2
     if [ "$1" != "$2" ]; then
         echo "Failed test $3";
@@ -16,11 +16,12 @@ function assert() {
 }
 
 ### SETUP ###
-mkdir working
+mkdir -p working
 cd working
 
 ### TEST A ###
 cp ../BasicTest.hs ../Main.hs .
+echo "attempting to make"
 ghc --make Main.hs -o basic 2> /dev/null
 OUTPUT_A=`./basic --dyre-debug`
 assert "$OUTPUT_A" "Basic Test Version 1.0 - 3" "A"
