@@ -4,22 +4,23 @@ deals with error handling, and not the compilation itself /per se/.
 -}
 module Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString ) where
 
-import System.IO         ( openFile, hClose, IOMode(..) )
+import System.IO         ( IOMode(..), withFile)
 import System.Exit       ( ExitCode(..) )
 import System.Process    ( runProcess, waitForProcess )
-import System.FilePath   ( (</>) )
+import System.FilePath   ( (</>), takeDirectory )
 import System.Directory  ( getCurrentDirectory, doesFileExist
-                         , createDirectoryIfMissing )
-import Control.Exception ( bracket )
+                         , createDirectoryIfMissing, setCurrentDirectory)
 
 import Config.Dyre.Paths  ( getPaths )
 import Config.Dyre.Params ( Params(..) )
 
+import Data.Maybe (isJust)
+
 -- | Return the path to the error file.
 getErrorPath :: Params cfgType -> IO FilePath
 getErrorPath params = do
-    (_,_,_, cacheDir, _) <- getPaths params
-    return $ cacheDir </> "errors.log"
+    (_,_,_, cacheDirectory, _) <- getPaths params
+    return $ cacheDirectory </> "errors.log"
 
 -- | If the error file exists and actually has some contents, return
 --   'Just' the error string. Otherwise return 'Nothing'.
@@ -38,16 +39,24 @@ getErrorString params = do
 --   containing any compiler output.
 customCompile :: Params cfgType -> IO ()
 customCompile params@Params{statusOut = output} = do
-    (thisBinary, tempBinary, configFile, cacheDir, libsDir) <- getPaths params
+    (_, tempBinary, configFile, cacheDirectory, libsDir) <- getPaths params
     output $ "Configuration '" ++ configFile ++  "' changed. Recompiling."
-    createDirectoryIfMissing True cacheDir
+    createDirectoryIfMissing True cacheDirectory
 
     -- Compile occurs in here
     errFile <- getErrorPath params
-    result <- bracket (openFile errFile WriteMode) hClose $ \errHandle -> do
-        ghcOpts <- makeFlags params configFile tempBinary cacheDir libsDir
-        ghcProc <- runProcess "ghc" ghcOpts (Just cacheDir) Nothing
-                              Nothing Nothing (Just errHandle)
+    result <- withFile errFile WriteMode $ \errHandle -> do
+        ghcOptions <- makeFlags params configFile tempBinary cacheDirectory libsDir
+        stackYaml <- do
+          let stackYamlPath = takeDirectory configFile </> "stack.yaml"
+          stackYamlExists <- doesFileExist stackYamlPath
+          if stackYamlExists
+            then return $ Just stackYamlPath
+            else return Nothing
+        output $ "Compiling with " ++ if isJust stackYaml then "stack" else "ghc" ++ "."
+        ghcProc <- maybe (runProcess "ghc" ghcOptions (Just cacheDirectory) Nothing Nothing Nothing (Just errHandle))        
+                         (\stackYaml' -> runProcess "stack" ("ghc" : "--stack-yaml" : stackYaml' : "--" : ghcOptions) (Just $ takeDirectory configFile) Nothing Nothing Nothing (Just errHandle))
+                         stackYaml
         waitForProcess ghcProc
 
     -- Display a helpful little status message
@@ -59,16 +68,13 @@ customCompile params@Params{statusOut = output} = do
 makeFlags :: Params cfgType -> FilePath -> FilePath -> FilePath
           -> FilePath -> IO [String]
 makeFlags Params{ghcOpts = flags, hidePackages = hides, forceRecomp = force, includeCurrentDirectory = includeCurDir}
-          cfgFile tmpFile cacheDir libsDir = do
+          cfgFile tmpFile cacheDirectory libsDir = do
     currentDir <- getCurrentDirectory
     return . concat $ [ ["-v0", "-i" ++ libsDir]
-                      , if includeCurDir
-                          then ["-i" ++ currentDir]
-                          else [] 
-                      , ["-outputdir", cacheDir]
+                      , ["-i" ++ currentDir | includeCurDir]
+                      , ["-outputdir", cacheDirectory]
                       , prefix "-hide-package" hides, flags
                       , ["--make", cfgFile, "-o", tmpFile]
                       , ["-fforce-recomp" | force] -- Only if force is true
                       ]
   where prefix y = concatMap $ \x -> [y,x]
-
