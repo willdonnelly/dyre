@@ -30,7 +30,7 @@ module Config.Dyre.Relaunch
   , restoreBinaryState
   ) where
 
-import Data.Maybe           ( fromMaybe, fromJust )
+import Data.Maybe           ( fromMaybe )
 import System.IO            ( writeFile, readFile )
 import Data.Binary          ( Binary, encodeFile, decodeFile )
 import Control.Exception    ( try, SomeException )
@@ -48,7 +48,7 @@ import Config.Dyre.Compat   ( customExec, getPIDString )
 --   value of 'Nothing', the current value of 'getArgs' will be used.
 relaunchMaster :: Maybe [String] -> IO ()
 relaunchMaster otherArgs = do
-    masterPath <- fmap fromJust getMasterBinary
+    masterPath <- fmap (fromMaybe $ error "'dyre' data-store doesn't exist (in Config.Dyre.Relaunch.relaunchMaster)") getMasterBinary
     customExec masterPath otherArgs
 
 -- | Relaunch the master binary, but first preserve the program
