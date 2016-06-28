@@ -7,7 +7,7 @@ module Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString ) where
 import System.IO         ( openFile, hClose, IOMode(..) )
 import System.Exit       ( ExitCode(..) )
 import System.Process    ( runProcess, waitForProcess )
-import System.FilePath   ( (</>) )
+import System.FilePath   ( (</>), takeDirectory)
 import System.Directory  ( getCurrentDirectory, doesFileExist
                          , createDirectoryIfMissing )
 import Control.Exception ( bracket )
@@ -46,8 +46,17 @@ customCompile params@Params{statusOut = output} = do
     errFile <- getErrorPath params
     result <- bracket (openFile errFile WriteMode) hClose $ \errHandle -> do
         ghcOpts <- makeFlags params configFile tempBinary cacheDir libsDir
-        ghcProc <- runProcess "ghc" ghcOpts (Just cacheDir) Nothing
-                              Nothing Nothing (Just errHandle)
+        stackYaml <- do
+          let stackYamlPath = takeDirectory configFile </> "stack.yaml"
+          stackYamlExists <- doesFileExist stackYamlPath
+          if stackYamlExists
+            then return $ Just stackYamlPath
+            else return Nothing
+        ghcProc <- maybe (runProcess "ghc" ghcOpts (Just cacheDir) Nothing
+                              Nothing Nothing (Just errHandle))
+                         (\stackYaml' -> runProcess "stack" ("ghc" : "--stack-yaml" : stackYaml' : "--" : ghcOpts)
+                              Nothing Nothing Nothing Nothing (Just errHandle))
+                         stackYaml
         waitForProcess ghcProc
 
     -- Display a helpful little status message
