@@ -9,7 +9,8 @@ import System.Exit       ( ExitCode(..) )
 import System.Process    ( runProcess, waitForProcess )
 import System.FilePath   ( (</>), takeDirectory, (<.>), (-<.>))
 import System.Directory  ( getCurrentDirectory, doesFileExist
-                         , createDirectoryIfMissing, renameFile )
+                         , createDirectoryIfMissing
+                         , renameFile, removeFile )
 import Control.Exception ( bracket )
 import Control.Monad     ( when )
 
@@ -59,7 +60,9 @@ customCompile params@Params{statusOut = output} = do
                               Nothing Nothing Nothing Nothing (Just errHandle))
                          stackYaml
         exitCode <- waitForProcess ghcProc
-        when (exitCode == ExitSuccess) $ renameFile (tempBinary -<.> "part") tempBinary
+        if (exitCode == ExitSuccess) 
+          then renameFile (tempBinary -<.> "tmp") tempBinary
+          else removeFile tempBinary
         return exitCode
 
     -- Display a helpful little status message
@@ -79,7 +82,7 @@ makeFlags Params{ghcOpts = flags, hidePackages = hides, forceRecomp = force, inc
                           else [] 
                       , ["-outputdir", cacheDir]
                       , prefix "-hide-package" hides, flags
-                      , ["--make", cfgFile, "-o", tmpFile <.> "part"]
+                      , ["--make", cfgFile, "-o", tmpFile <.> "tmp"]
                       , ["-fforce-recomp" | force] -- Only if force is true
                       ]
   where prefix y = concatMap $ \x -> [y,x]
