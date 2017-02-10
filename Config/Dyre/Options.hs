@@ -28,7 +28,7 @@ module Config.Dyre.Options
   ) where
 
 import Data.List                     (isPrefixOf)
-import Data.Maybe                    (fromJust)
+import Data.Maybe                    (fromMaybe)
 import System.IO.Storage             (withStore, putValue, getValue, getDefaultValue)
 import System.Environment            (getArgs, getProgName, withArgs)
 import System.Environment.Executable (getExecutablePath)
@@ -115,7 +115,7 @@ customOptions otherArgs = do
             , case stateFile of
                    Nothing -> ""
                    Just sf -> "--dyre-state-persist=" ++ sf
-            , "--dyre-master-binary=" ++ fromJust masterPath
+            , "--dyre-master-binary=" ++ fromMaybe (error "'dyre' data-store doesn't exist (in Config.Dyre.Options.customOptions)") masterPath
             ])
     return args
 
