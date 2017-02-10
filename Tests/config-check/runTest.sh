@@ -4,7 +4,7 @@
 # upon relaunch, and restore the state again after.
 
 # Assert the equality of two strings.
-function assert() {
+assert() {
     echo "$1" >&2
     if [ "$1" != "$2" ]; then
         echo "Failed test $3";
@@ -12,7 +12,7 @@ function assert() {
     fi
 }
 
-mkdir working
+mkdir -p working
 cd working
 
 ### TEST A ###
