@@ -130,7 +130,7 @@ defaultParams = Params
     , includeCurrentDirectory = True
     }
 
--- | 'wrapMain' is how Dyre recieves control of the program. It is expected
+-- | 'wrapMain' is how Dyre receives control of the program. It is expected
 --   that it will be partially applied with its parameters to yield a 'main'
 --   entry point, which will then be called by the 'main' function, as well
 --   as by any custom configurations.
