@@ -64,7 +64,13 @@ getPIDString = fmap show getProcessID
 
 #ifdef darwin_HOST_OS
 
--- OSX
+-- OSX.  In a threaded process execv fails with ENOTSUP.
+-- See http://uninformed.org/index.cgi?v=1&a=1&p=16.  So it
+-- is necessary to fork _then_ exec.
+--
+-- According to https://bugs.python.org/issue6800 this was
+-- fixed in OS X 10.6.  But I guess we'll leave the workaround
+-- in place until there is a compelling reason to remove it.
 
 customExec binary mArgs = do
     args <- customOptions mArgs
