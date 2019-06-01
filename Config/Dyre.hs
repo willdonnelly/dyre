@@ -143,28 +143,30 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $
        else do
         -- Get the important paths
         (thisBinary,tempBinary,configFile,cacheDir,libsDir) <- getPaths params
-        libFiles <- recFiles libsDir
-        libTimes <- mapM maybeModTime libFiles
 
-        -- Check their modification times
-        thisTime <- maybeModTime thisBinary
-        tempTime <- maybeModTime tempBinary
         confTime <- maybeModTime configFile
         let confExists = confTime /= Nothing
 
         denyReconf  <- getDenyReconf
         forceReconf <- getForceReconf
-        -- Either the user or timestamps indicate we need to recompile
-        let needReconf = or [ tempTime < confTime
-                            , tempTime < thisTime
-                            , or . map (tempTime <) $ libTimes
-                            , forceReconf
-                            ]
 
-        -- If we're allowed to reconfigure, a configuration exists, and
-        -- we detect a need to recompile it, then go ahead and compile.
-        when (not denyReconf && confExists && needReconf)
-             (customCompile params)
+        doReconf <- case (confExists, denyReconf, forceReconf) of
+          (False, _, _) -> pure False  -- no config file
+          (_, True, _)  -> pure False  -- deny overrules force
+          (_, _, True)  -> pure True   -- avoid timestamp/hash checks
+          (_, _, False) -> do
+            -- check modification times
+            libFiles <- recFiles libsDir
+            libTimes <- mapM maybeModTime libFiles
+            thisTime <- maybeModTime thisBinary
+            tempTime <- maybeModTime tempBinary
+            pure $ or
+              [ tempTime < confTime  -- config newer than custom bin
+              , tempTime < thisTime  -- main bin newer than custom bin
+              , or . map (tempTime <) $ libTimes
+              ]
+
+        when doReconf (customCompile params)
 
         -- If there's a custom binary and we're not it, run it. Otherwise
         -- just launch the main function, reporting errors if appropriate.
