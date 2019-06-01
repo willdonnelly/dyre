@@ -41,9 +41,16 @@ library
                    Config.Dyre.Options,
                    Config.Dyre.Compile,
                    Config.Dyre.Relaunch
-  build-depends:   base >= 4 && < 5, process, filepath,
-                   directory, time, time-compat, binary,
-                   executable-path, xdg-basedir, io-storage
+  build-depends:
+    base >= 4 && < 5
+    , binary
+    , directory >= 1.2.0.0
+    , executable-path
+    , filepath
+    , io-storage
+    , process
+    , time
+    , xdg-basedir
 
   if os(windows)
       build-depends: Win32

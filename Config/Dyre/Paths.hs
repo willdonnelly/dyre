@@ -6,7 +6,6 @@ import System.Directory               (getCurrentDirectory, doesFileExist, getMo
 import System.Environment.XDG.BaseDir (getUserCacheDir, getUserConfigDir)
 import System.Environment.Executable  (getExecutablePath)
 import Data.Time
-import Data.Time.Compat
 
 import Config.Dyre.Params
 import Config.Dyre.Options
@@ -38,5 +37,5 @@ maybeModTime :: FilePath -> IO (Maybe UTCTime)
 maybeModTime path = do
     fileExists <- doesFileExist path
     if fileExists
-       then fmap (Just . toUTCTime) $ getModificationTime path
+       then fmap Just $ getModificationTime path
        else return Nothing
