@@ -51,11 +51,7 @@ A full example of using most of Dyre's major features is as follows:
 >             "quit" -> return ()
 >             other  -> relaunchWithTextState (State $ other:buffer) Nothing
 >
->    dyreExample = Dyre.wrapMain $ Dyre.defaultParams
->        { Dyre.projectName = "dyreExample"
->        , Dyre.realMain    = realMain
->        , Dyre.showError   = showError
->        }
+>    dyreExample = Dyre.wrapMain $ Dyre.newParams "dyreExample" realMain showError
 
 Notice that all of the program logic is contained in the 'DyreExample'
 module. The main module of the program is absolutely trivial, being
@@ -76,11 +72,11 @@ When reading the above program, notice that the majority of the
 code is simply *program logic*. Dyre is designed to intelligently
 handle recompilation with a minimum of programmer work.
 
-Some mention should be made of Dyre's defaults. The 'defaultParams'
-structure used in the example defines reasonable default values for
-most configuration items. The three elements defined above are the
-only elements that must be overridden. For documentation of the
-parameters, consult the 'Config.Dyre.Params' module.
+Some mention should be made of Dyre's defaults. The 'newParams'
+function used in the example constructs a 'Params' with the required
+values as given, and reasonable default values for other
+configuration items.  For documentation of the
+parameters, see 'Params'.
 
 In the absence of any customization, Dyre will search for configuration
 files in '$XDG_CONFIG_HOME/<appName>/<appName>.hs', and will store
@@ -93,7 +89,13 @@ and will detect custom configurations and recompile correctly even when
 the library isn't installed, so long as it is in the current directory
 when run.
 -}
-module Config.Dyre ( wrapMain, Params(..), defaultParams ) where
+module Config.Dyre
+  (
+    wrapMain
+    , Params(..)
+    , newParams
+    , defaultParams
+  ) where
 
 import System.IO           ( hPutStrLn, stderr )
 import System.Directory    ( doesFileExist, removeFile, canonicalizePath
@@ -114,6 +116,9 @@ import Config.Dyre.Paths   ( getPaths, maybeModTime )
 
 -- | A set of reasonable defaults for configuring Dyre. The fields that
 --   have to be filled are 'projectName', 'realMain', and 'showError'.
+--
+-- See also 'newParams' which takes the required fields as arguments.
+--
 defaultParams :: Params cfgType
 defaultParams = Params
     { projectName  = undefined
@@ -129,6 +134,17 @@ defaultParams = Params
     , rtsOptsHandling = RTSAppend []
     , includeCurrentDirectory = True
     }
+
+-- | Construct a 'Params' with the required values as given, and
+-- reasonable defaults for everything else.
+--
+newParams
+  :: String                  -- ^ 'projectName'
+  -> (cfg -> IO ())          -- ^ 'realMain' function
+  -> (cfg -> String -> cfg)  -- ^ 'showError' function
+  -> Params cfg
+newParams name main err =
+  defaultParams { projectName = name, realMain = main, showError = err }
 
 -- | 'wrapMain' is how Dyre recieves control of the program. It is expected
 --   that it will be partially applied with its parameters to yield a 'main'
