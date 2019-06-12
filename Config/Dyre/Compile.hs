@@ -59,16 +59,22 @@ customCompile params@Params{statusOut = output} = do
                          (\stackYaml' -> runProcess "stack" ("ghc" : "--stack-yaml" : stackYaml' : "--" : ghcOpts)
                               Nothing Nothing Nothing Nothing (Just errHandle))
                          stackYaml
-        exitCode <- waitForProcess ghcProc
-        if (exitCode == ExitSuccess) 
-          then renameFile (tempBinary -<.> "tmp") tempBinary
-          else removeFile tempBinary
-        return exitCode
+        waitForProcess ghcProc
 
-    -- Display a helpful little status message
-    if result /= ExitSuccess
-       then output "Error occurred while loading configuration file."
-       else output "Program reconfiguration successful."
+    case result of
+      ExitSuccess -> do
+        renameFile (tempBinary -<.> "tmp") tempBinary
+
+        -- GHC sometimes prints to stderr, even on success.
+        -- Other parts of dyre infer error if error file exists
+        -- and is non-empty, so remove it.
+        removeFile errFile
+
+        output "Program reconfiguration successful."
+
+      _ -> do
+        removeFile tempBinary
+        output "Error occurred while loading configuration file."
 
 -- | Assemble the arguments to GHC so everything compiles right.
 makeFlags :: Params cfgType -> FilePath -> FilePath -> FilePath
