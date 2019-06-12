@@ -3,10 +3,13 @@
 # Run all test scripts for Dyre.
 
 for TESTDIR in `find . -mindepth 1 -type d`; do
+    echo "Running $TESTDIR"
     cd $TESTDIR
     TEST_RESULT=`./runTest.sh`
-    if [ "$TEST_RESULT" != 'Passed' ]; then
-        echo "$TEST_RESULT in test $TESTDIR"
+    TEST_STATUS=$?
+    if [ "$TEST_STATUS" -ne 0 ]; then
+        echo "$TESTDIR failed; output:"
+        echo "$TEST_RESULT";
         exit 1
     fi
     cd ..
