@@ -57,6 +57,7 @@ matrix:
     - compiler: ghc-8.8.1
 before_install:
   - HC=$(echo "/opt/$CC/bin/ghc" | sed 's/-/\//')
+  - export PATH="/opt/$(echo $CC | sed 's/-/\//')/bin:$PATH"
   - HCPKG="$HC-pkg"
   - unset CC
   - CABAL=/opt/ghc/bin/cabal
