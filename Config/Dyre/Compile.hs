@@ -7,7 +7,7 @@ module Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString ) where
 import System.IO         ( openFile, hClose, IOMode(..) )
 import System.Exit       ( ExitCode(..) )
 import System.Process    ( runProcess, waitForProcess )
-import System.FilePath   ( (</>), takeDirectory, (<.>), (-<.>))
+import System.FilePath   ( (</>), takeDirectory, (<.>), replaceExtension )
 import System.Directory  ( getCurrentDirectory, doesFileExist
                          , createDirectoryIfMissing
                          , renameFile, removeFile )
@@ -63,7 +63,7 @@ customCompile params@Params{statusOut = output} = do
 
     case result of
       ExitSuccess -> do
-        renameFile (tempBinary -<.> "tmp") tempBinary
+        renameFile (replaceExtension tempBinary "tmp") tempBinary
 
         -- GHC sometimes prints to stderr, even on success.
         -- Other parts of dyre infer error if error file exists
