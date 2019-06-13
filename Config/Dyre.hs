@@ -192,8 +192,12 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $
         errorData    <- getErrorString params
         customExists <- doesFileExist tempBinary
 
-        if confExists && customExists
-           then do
+        case (confExists, customExists) of
+          (False, _) ->
+            -- There is no custom config.  Ignore custom binary if present.
+            -- Run main binary and ignore errors file.
+            enterMain Nothing
+          (True, True) -> do
                -- Canonicalize the paths for comparison to avoid symlinks
                -- throwing us off. We do it here instead of earlier because
                -- canonicalizePath throws an exception when the file is
@@ -203,7 +207,10 @@ wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $
                if thisBinary' /= tempBinary'
                   then launchSub errorData tempBinary
                   else enterMain errorData
-           else enterMain errorData
+          (True, False) ->
+            -- Config exists, but no custom binary.
+            -- Looks like compile failed; run main binary with error data.
+           enterMain errorData
   where launchSub errorData tempBinary = do
             statusOut params $ "Launching custom binary " ++ tempBinary ++ "\n"
             givenArgs <- handleRTSOptions $ rtsOptsHandling params

@@ -39,6 +39,13 @@ cp ../badConfig.hs basicTest.hs
 OUTPUT_C=`./basic --dyre-debug`
 assert "$OUTPUT_C" "Compile Error" "C"
 
+### TEST D ###
+# Now test that removing the custom config results in
+# successful run of non-custom binary.
+rm basicTest.hs
+OUTPUT_D=`./basic --dyre-debug`
+assert "$OUTPUT_D" "Basic Test Version 1.0 - 3" "D"
+
 ### TEARDOWN ###
 echo "Passed"
 cd ..
