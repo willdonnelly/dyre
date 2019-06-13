@@ -8,6 +8,8 @@ assert() {
     echo "$1" >&2
     if [ "$1" != "$2" ]; then
         echo "Failed test $3";
+        echo " expected $2"
+        echo "      got $1"
         exit 1;
     fi
 }
@@ -18,7 +20,7 @@ cd working
 ### TEST A ###
 cp ../ConfigCheckTest.hs ../Main.hs .
 cp ../configCheckTestA.hs ./configCheckTest.hs
-ghc --make Main.hs -o configCheck 2> /dev/null
+ghc --make Main.hs -o configCheck
 OUTPUT_A=`./configCheck --dyre-debug`
 assert "$OUTPUT_A" "custom-a" "A"
 
