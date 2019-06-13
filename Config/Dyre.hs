@@ -134,6 +134,7 @@ defaultParams = Params
     , rtsOptsHandling = RTSAppend []
     , includeCurrentDirectory = True
     }
+{-# DEPRECATED defaultParams "Use 'newParams' instead" #-}
 
 -- | Construct a 'Params' with the required values as given, and
 -- reasonable defaults for everything else.
