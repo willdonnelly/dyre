@@ -46,6 +46,22 @@ rm basicTest.hs
 OUTPUT_D=`./basic --dyre-debug`
 assert "$OUTPUT_D" "Basic Test Version 1.0 - 3" "D"
 
+### TEST E ###
+# Test use of modules under "$confdir/lib/"
+cp ../moduleConfig.hs basicTest.hs
+mkdir lib
+cp ../MyConfig.hs lib/MyConfig.hs
+OUTPUT_E=`./basic --dyre-debug`
+assert "$OUTPUT_E" "Modules are great! - 3" "E"
+
+### TEST F ###
+# Test that changes to modules under "$confdir/lib/" trigger recompilation
+cp ../moduleConfig.hs basicTest.hs
+cp ../MyConfig-updated.hs lib/MyConfig.hs
+OUTPUT_E=`./basic --dyre-debug`
+assert "$OUTPUT_E" "Modules are still great! - 3" "E"
+
+
 ### TEARDOWN ###
 echo "Passed"
 cd ..
