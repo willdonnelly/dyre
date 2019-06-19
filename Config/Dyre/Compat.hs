@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 
+
 {- |
 Compatibility code for things that need to be done differently
 on different systems.
@@ -55,14 +56,14 @@ foreign import stdcall unsafe "winbase.h ExitProcess"
 
 #else
 
-import System.Posix.Process ( executeFile, getProcessID, exitImmediately
-                            , forkProcess, getProcessStatus, ProcessStatus(..) )
-import System.Posix.Signals ( raiseSignal, sigTSTP )
-import System.Exit          ( ExitCode(..) )
-
-getPIDString = fmap show getProcessID
+import System.Posix.Process ( executeFile, getProcessID )
 
 #ifdef darwin_HOST_OS
+
+import System.Posix.Process
+  ( exitImmediately , forkProcess, getProcessStatus, ProcessStatus(..) )
+import System.Posix.Signals ( raiseSignal, sigTSTP )
+import System.Exit          ( ExitCode(ExitSuccess) )
 
 -- OSX.  In a threaded process execv fails with ENOTSUP.
 -- See http://uninformed.org/index.cgi?v=1&a=1&p=16.  So it
@@ -98,7 +99,10 @@ customExec binary mArgs = do
 
 #endif
 
+getPIDString = fmap show getProcessID
+
 #endif
+
 
 -- | Called whenever execution needs to be transferred over to
 --   a different binary.

@@ -12,10 +12,12 @@ import System.Directory  ( getCurrentDirectory, doesFileExist
                          , createDirectoryIfMissing
                          , renameFile, removeFile )
 import Control.Exception ( bracket )
-import Control.Monad     ( when )
 
 import Config.Dyre.Paths  ( getPaths )
-import Config.Dyre.Params ( Params(..) )
+import Config.Dyre.Params
+  ( Params(Params)
+  , ghcOpts, hidePackages, forceRecomp, includeCurrentDirectory, statusOut
+  )
 
 -- | Return the path to the error file.
 getErrorPath :: Params cfgType -> IO FilePath
@@ -40,23 +42,23 @@ getErrorString params = do
 --   containing any compiler output.
 customCompile :: Params cfgType -> IO ()
 customCompile params@Params{statusOut = output} = do
-    (thisBinary, tempBinary, configFile, cacheDir, libsDir) <- getPaths params
+    (_, tempBinary, configFile, cacheDir, libsDir) <- getPaths params
     output $ "Configuration '" ++ configFile ++  "' changed. Recompiling."
     createDirectoryIfMissing True cacheDir
 
     -- Compile occurs in here
     errFile <- getErrorPath params
     result <- bracket (openFile errFile WriteMode) hClose $ \errHandle -> do
-        ghcOpts <- makeFlags params configFile tempBinary cacheDir libsDir
+        flags <- makeFlags params configFile tempBinary cacheDir libsDir
         stackYaml <- do
           let stackYamlPath = takeDirectory configFile </> "stack.yaml"
           stackYamlExists <- doesFileExist stackYamlPath
           if stackYamlExists
             then return $ Just stackYamlPath
             else return Nothing
-        ghcProc <- maybe (runProcess "ghc" ghcOpts (Just cacheDir) Nothing
+        ghcProc <- maybe (runProcess "ghc" flags (Just cacheDir) Nothing
                               Nothing Nothing (Just errHandle))
-                         (\stackYaml' -> runProcess "stack" ("ghc" : "--stack-yaml" : stackYaml' : "--" : ghcOpts)
+                         (\stackYaml' -> runProcess "stack" ("ghc" : "--stack-yaml" : stackYaml' : "--" : flags)
                               Nothing Nothing Nothing Nothing (Just errHandle))
                          stackYaml
         waitForProcess ghcProc

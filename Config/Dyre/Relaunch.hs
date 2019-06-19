@@ -35,10 +35,10 @@ import System.IO            ( writeFile, readFile )
 import Data.Binary          ( Binary, encodeFile, decodeFile )
 import Control.Exception    ( try, SomeException )
 import System.FilePath      ( (</>) )
-import System.Directory     ( getTemporaryDirectory, removeFile )
+import System.Directory     ( getTemporaryDirectory )
 
-import System.IO.Storage    ( putValue, delValue )
-import Config.Dyre.Options  ( customOptions, getMasterBinary, getStatePersist )
+import System.IO.Storage    ( putValue )
+import Config.Dyre.Options  ( getMasterBinary, getStatePersist )
 import Config.Dyre.Compat   ( customExec, getPIDString )
 
 -- | Just relaunch the master binary. We don't have any important

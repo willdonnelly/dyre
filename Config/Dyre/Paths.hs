@@ -17,19 +17,20 @@ getPaths params@Params{projectName = pName} = do
     thisBinary <- getExecutablePath
     debugMode  <- getDebug
     cwd <- getCurrentDirectory
-    cacheDir  <- case (debugMode, cacheDir params) of
+    cacheDir' <- case (debugMode, cacheDir params) of
                       (True,  _      ) -> return $ cwd </> "cache"
                       (False, Nothing) -> getUserCacheDir pName
                       (False, Just cd) -> cd
-    configDir <- case (debugMode, configDir params) of
+    confDir   <- case (debugMode, configDir params) of
                       (True,  _      ) -> return cwd
                       (False, Nothing) -> getUserConfigDir pName
                       (False, Just cd) -> cd
-    let tempBinary = cacheDir </> pName ++ "-" ++ os ++ "-" ++ arch
-                              <.> takeExtension thisBinary
-    let configFile = configDir </> pName ++ ".hs"
-    let libsDir = configDir </> "lib"
-    return (thisBinary, tempBinary, configFile, cacheDir, libsDir)
+    let
+      tempBinary =
+        cacheDir' </> pName ++ "-" ++ os ++ "-" ++ arch <.> takeExtension thisBinary
+      configFile = confDir </> pName ++ ".hs"
+      libsDir = confDir </> "lib"
+    return (thisBinary, tempBinary, configFile, cacheDir', libsDir)
 
 -- | Check if a file exists. If it exists, return Just the modification
 --   time. If it doesn't exist, return Nothing.

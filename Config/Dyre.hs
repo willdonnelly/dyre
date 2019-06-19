@@ -98,7 +98,7 @@ module Config.Dyre
   ) where
 
 import System.IO           ( hPutStrLn, stderr )
-import System.Directory    ( doesFileExist, removeFile, canonicalizePath
+import System.Directory    ( doesFileExist, canonicalizePath
                            , getDirectoryContents, doesDirectoryExist )
 import System.FilePath     ( (</>) )
 import System.Environment  (getArgs)
@@ -108,9 +108,9 @@ import Control.Exception   (assert)
 import Control.Monad       ( when, filterM )
 
 import Config.Dyre.Params  ( Params(..), RTSOptionHandling(..) )
-import Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString )
+import Config.Dyre.Compile ( customCompile, getErrorString )
 import Config.Dyre.Compat  ( customExec )
-import Config.Dyre.Options ( getForceReconf, getDenyReconf, getDebug
+import Config.Dyre.Options ( getForceReconf, getDenyReconf
                            , withDyreOptions )
 import Config.Dyre.Paths   ( getPaths, maybeModTime )
 
@@ -152,14 +152,14 @@ newParams name main err =
 --   entry point, which will then be called by the 'main' function, as well
 --   as by any custom configurations.
 wrapMain :: Params cfgType -> cfgType -> IO ()
-wrapMain params@Params{projectName = pName} cfg = withDyreOptions params $
+wrapMain params cfg = withDyreOptions params $
     -- Allow the 'configCheck' parameter to disable all of Dyre's recompilation
     -- checks, in favor of simply proceeding ahead to the 'realMain' function.
     if not $ configCheck params
        then realMain params cfg
        else do
         -- Get the important paths
-        (thisBinary,tempBinary,configFile,cacheDir,libsDir) <- getPaths params
+        (thisBinary,tempBinary,configFile,_,libsDir) <- getPaths params
 
         confTime <- maybeModTime configFile
         let confExists = confTime /= Nothing
@@ -241,22 +241,26 @@ recFiles d = do
            return $ files ++ subfiles
        else return []
 
-assertM b = assert b $ return ()
+assertM :: Applicative f => Bool -> f ()
+assertM b = assert b (pure ())
 
--- | Filters GHC runtime system arguments:
+-- | Extract GHC runtime system arguments
+filterRTSArgs :: [String] -> [String]
 filterRTSArgs = filt False
   where
     filt _     []             = []
-    filt _     ("--RTS":rest) = []
+    filt _     ("--RTS":_)    = []
     filt False ("+RTS" :rest) = filt True  rest
     filt True  ("-RTS" :rest) = filt False rest
     filt False (_      :rest) = filt False rest
     filt True  (arg    :rest) = arg:filt True rest
     --filt state args           = error $ "Error filtering RTS arguments in state " ++ show state ++ " remaining arguments: " ++ show args
 
-editRTSOptions opts (RTSReplace ls) = ls
+editRTSOptions :: [String] -> RTSOptionHandling -> [String]
+editRTSOptions _ (RTSReplace ls) = ls
 editRTSOptions opts (RTSAppend ls)  = opts ++ ls
 
+handleRTSOptions :: RTSOptionHandling -> IO [String]
 handleRTSOptions h = do fargs <- getFullArgs
                         args  <- getArgs
                         let rtsArgs = editRTSOptions (filterRTSArgs fargs) h
