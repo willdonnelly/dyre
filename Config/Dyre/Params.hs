@@ -8,7 +8,7 @@ module Config.Dyre.Params ( Params(..), RTSOptionHandling(..) ) where
 -- | This structure is how all kinds of useful data is fed into Dyre. Of
 --   course, only the 'projectName', 'realMain', and 'showError' fields
 --   are really necessary. By using the set of default values provided
---   as 'Config.Dyre.defaultParams', you can get all the benefits of
+--   as 'Config.Dyre.newParams', you can get all the benefits of
 --   using Dyre to configure your program in only five or six lines of
 --   code.
 data Params cfgType = Params
@@ -51,6 +51,11 @@ data Params cfgType = Params
     --   prevent name shadowing within project directory.)  --
     }
 
-data RTSOptionHandling = RTSReplace [String] -- replaces RTS options with given list
-                       | RTSAppend  [String] -- merges given list with RTS options from command line (so that nothing is lost)
+
+-- | Specify additional or replacement GHC runtime system options
+data RTSOptionHandling
+  = RTSReplace [String]
+  -- ^ replaces RTS options with given list
+  | RTSAppend  [String]
+  -- ^ merges given list with RTS options from command line (so that nothing is lost)
 

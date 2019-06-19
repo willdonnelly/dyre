@@ -13,63 +13,69 @@ wraps around the 'realMain' value from that structure, yielding an almost
 identical function which has been augmented with dynamic recompilation
 functionality.
 
-The 'Config.Dyre.Relaunch' module provides the ability to restart the
+The "Config.Dyre.Relaunch" module provides the ability to restart the
 program (recompiling if applicable), and persist state across restarts,
 but it has no impact whatsoever on the rest of the library whether it
 is used or not.
 
 A full example of using most of Dyre's major features is as follows:
 
->    -- DyreExample.hs --
->    module DyreExample where
->
->    import qualified Config.Dyre as Dyre
->    import Config.Dyre.Relaunch
->
->    import System.IO
->
->    data Config = Config { message :: String, errorMsg :: Maybe String }
->    data State  = State { bufferLines :: [String] } deriving (Read, Show)
->
->    defaultConfig :: Config
->    defaultConfig = Config "Dyre Example v0.1" Nothing
->
->    showError :: Config -> String -> Config
->    showError cfg msg = cfg { errorMsg = Just msg }
->
->    realMain Config{message = message, errorMsg = errorMsg } = do
->        (State buffer) <- restoreTextState $ State []
->        case errorMsg of
->             Nothing -> return ()
->             Just em -> putStrLn $ "Error: " ++ em
->        putStrLn message
->        mapM putStrLn . reverse $ buffer
->        putStr "> " >> hFlush stdout
->        input <- getLine
->        case input of
->             "exit" -> return ()
->             "quit" -> return ()
->             other  -> relaunchWithTextState (State $ other:buffer) Nothing
->
->    dyreExample = Dyre.wrapMain $ Dyre.newParams "dyreExample" realMain showError
+@
+-- DyreExample.hs --
+module DyreExample where
 
-Notice that all of the program logic is contained in the 'DyreExample'
+import qualified "Config.Dyre" as Dyre
+import "Config.Dyre.Relaunch"
+
+import System.IO
+
+data Config = Config { message :: String, errorMsg :: Maybe String }
+data State  = State { bufferLines :: [String] } deriving (Read, Show)
+
+defaultConfig :: Config
+defaultConfig = Config "Dyre Example v0.1" Nothing
+
+showError :: Config -> String -> Config
+showError cfg msg = cfg { errorMsg = Just msg }
+
+realMain Config{message = message, errorMsg = errorMsg } = do
+    (State buffer) <- 'Config.Dyre.Relaunch.restoreTextState' $ State []
+    case errorMsg of
+         Nothing -> return ()
+         Just em -> putStrLn $ "Error: " ++ em
+    putStrLn message
+    mapM putStrLn . reverse $ buffer
+    putStr "> " >> hFlush stdout
+    input <- getLine
+    case input of
+         "exit" -> return ()
+         "quit" -> return ()
+         other  -> 'Config.Dyre.Relaunch.relaunchWithTextState' (State $ other:buffer) Nothing
+
+dyreExample = Dyre.'Dyre.wrapMain' $ Dyre.'Dyre.newParams' "dyreExample" realMain showError
+@
+
+Notice that all of the program logic is contained in the @DyreExample@
 module. The main module of the program is absolutely trivial, being
 essentially just the default configuration for the program:
 
->    -- Main.hs --
->    import DyreExample
->    main = dyreExample defaultConfig
+@
+-- Main.hs --
+import DyreExample
+main = dyreExample defaultConfig
+@
 
 The user can then create a custom configuration file, which
 overrides some or all of the default configuration:
 
->    -- ~/.config/dyreExample/dyreExample.hs --
->    import DyreExample
->    main = dyreExample $ defaultConfig { message = "Dyre Example v0.1 (Modified)" }
+@
+-- ~\/.config\/dyreExample\/dyreExample.hs --
+import DyreExample
+main = dyreExample $ defaultConfig { message = "Dyre Example v0.1 (Modified)" }
+@
 
 When reading the above program, notice that the majority of the
-code is simply *program logic*. Dyre is designed to intelligently
+code is simply /program logic/. Dyre is designed to intelligently
 handle recompilation with a minimum of programmer work.
 
 Some mention should be made of Dyre's defaults. The 'newParams'
@@ -79,12 +85,12 @@ configuration items.  For documentation of the
 parameters, see 'Params'.
 
 In the absence of any customization, Dyre will search for configuration
-files in '$XDG_CONFIG_HOME/<appName>/<appName>.hs', and will store
-cache files in '$XDG_CACHE_HOME/<appName>/' directory. The module
-'System.Environment.XDG' is used for this purpose, which also provides
+files in @$XDG_CONFIG_HOME\/\<appName\>\/\<appName\>.hs@, and will store
+cache files in @$XDG_CACHE_HOME\/\<appName\>\/@ directory. The module
+"System.Environment.XDG" is used for this purpose, which also provides
 analogous behaviour on Windows.
 
-The above example can be tested by running Main.hs with 'runhaskell',
+The above example can be tested by running @Main.hs@ with @runhaskell@,
 and will detect custom configurations and recompile correctly even when
 the library isn't installed, so long as it is in the current directory
 when run.
@@ -147,9 +153,9 @@ newParams
 newParams name main err =
   defaultParams { projectName = name, realMain = main, showError = err }
 
--- | 'wrapMain' is how Dyre receives control of the program. It is expected
---   that it will be partially applied with its parameters to yield a 'main'
---   entry point, which will then be called by the 'main' function, as well
+-- | @wrapMain@ is how Dyre receives control of the program. It is expected
+--   that it will be partially applied with its parameters to yield a @main@
+--   entry point, which will then be called by the @main@ function, as well
 --   as by any custom configurations.
 wrapMain :: Params cfgType -> cfgType -> IO ()
 wrapMain params cfg = withDyreOptions params $

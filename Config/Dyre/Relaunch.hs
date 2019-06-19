@@ -1,24 +1,26 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-{-
-This is the only other module aside from 'Config.Dyre' which needs
+{- |
+
+This is the only other module aside from "Config.Dyre" which needs
 to be imported specially. It contains functions for restarting the
 program (which, usefully, will cause a recompile if the config has
 been changed), as well as saving and restoring state across said
 restarts.
 
 The impossibly simple function arguments are a consequence of a
-little cheating we do using the 'System.IO.Storage' library. Of
+little cheating we do using the "System.IO.Storage" library. Of
 course, we can't use the stored data unless something else put
 it there, so this module will probably explode horribly if used
 outside of a program whose recompilation is managed by Dyre.
 
 The functions for saving and loading state come in two variants:
 one which uses the 'Read' and 'Show' typeclasses, and one which
-uses Data.Binary to serialize it. The 'Read' and 'Show' versions
+uses "Data.Binary" to serialize it. The 'Read' and 'Show' versions
 are much easier to use thanks to automatic deriving, but the
 binary versions offer more control over saving and loading, as
 well as probably being a bit faster.
+
 -}
 module Config.Dyre.Relaunch
   ( relaunchMaster
@@ -42,10 +44,10 @@ import Config.Dyre.Options  ( getMasterBinary, getStatePersist )
 import Config.Dyre.Compat   ( customExec, getPIDString )
 
 -- | Just relaunch the master binary. We don't have any important
---   state to worry about. (Or, like when 'relaunchWith<X>State' calls
+--   state to worry about. (Or, like when @relaunchWith\<X\>State@ calls
 --   it, we're managing state on our own). It takes an argument which
 --   can optionally specify a new set of arguments. If it is given a
---   value of 'Nothing', the current value of 'getArgs' will be used.
+--   value of 'Nothing', the current value of 'System.Environment.getArgs' will be used.
 relaunchMaster :: Maybe [String] -> IO ()
 relaunchMaster otherArgs = do
     masterPath <- fmap (fromMaybe $ error "'dyre' data-store doesn't exist (in Config.Dyre.Relaunch.relaunchMaster)") getMasterBinary

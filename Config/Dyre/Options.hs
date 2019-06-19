@@ -1,20 +1,22 @@
-{-
+{- |
+
 Handling for the command-line options that can be used to configure
 Dyre. As of the last count, there are four of them, and more are
 unlikely to be needed. The only one that a user should ever need to
-use is the '--force-reconf' option, so the others all begin with
-'--dyre-<option-name>'.
+use is the @--force-reconf@ option, so the others all begin with
+@--dyre-<option-name>@.
 
 At the start of the program, before anything else occurs, the
 'withDyreOptions' function is used to hide Dyre's command-line
-options. They are loaded into the IO monad using the module
-'System.IO.Storage'. This keeps them safely out of the way of
+options. They are loaded into the @IO@ monad using the module
+"System.IO.Storage". This keeps them safely out of the way of
 the user code and our own.
 
 Later, when Dyre needs to access the options, it does so through
 the accessor functions defined here. When it comes time to pass
 control over to a new binary, it gets an argument list which
 preserves the important flags with a call to 'customOptions'.
+
 -}
 module Config.Dyre.Options
   ( removeDyreOptions
@@ -65,33 +67,33 @@ withDyreOptions Params{configCheck = check} action = withStore "dyre" $ do
     -- We filter the arguments, so now Dyre's arguments 'vanish'
     withArgs (removeDyreOptions args) action
 
--- | Get the value of the '--force-reconf' flag, which is used
+-- | Get the value of the @--force-reconf@ flag, which is used
 --   to force a recompile of the custom configuration.
 getForceReconf :: IO Bool
 getForceReconf = getDefaultValue "dyre" "forceReconf" False
 
--- | Get the value of the '--deny-reconf' flag, which disables
+-- | Get the value of the @--deny-reconf@ flag, which disables
 --   recompilation. This overrides "--force-reconf", too.
 getDenyReconf :: IO Bool
 getDenyReconf = getDefaultValue "dyre" "denyReconf" False
 
--- | Get the value of the '--dyre-debug' flag, which is used
+-- | Get the value of the @--dyre-debug@ flag, which is used
 --   to debug a program without installation. Specifically,
---   it forces the application to use './cache/' as the cache
---   directory, and './' as the configuration directory.
+--   it forces the application to use @./cache/@ as the cache
+--   directory, and @./@ as the configuration directory.
 getDebug  :: IO Bool
 getDebug = getDefaultValue "dyre" "debugMode" False
 
 -- | Get the path to the master binary. This is set to the path of
---   the *current* binary unless the '--dyre-master-binary=' flag
---   is set. Obviously, we pass the '--dyre-master-binary=' flag to
+--   the /current/ binary unless the @--dyre-master-binary=@ flag
+--   is set. Obviously, we pass the @--dyre-master-binary=@ flag to
 --   the custom configured application from the master binary.
 getMasterBinary :: IO (Maybe String)
 getMasterBinary = getValue "dyre" "masterBinary"
 
 -- | Get the path to a persistent state file. This is set only when
---   the '--dyre-state-persist=' flag is passed to the program. It
---   is used internally by 'Config.Dyre.Relaunch' to save and restore
+--   the @--dyre-state-persist=@ flag is passed to the program. It
+--   is used internally by "Config.Dyre.Relaunch" to save and restore
 --   state when relaunching the program.
 getStatePersist :: IO (Maybe String)
 getStatePersist = getValue "dyre" "persistState"

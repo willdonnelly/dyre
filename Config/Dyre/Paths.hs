@@ -1,3 +1,8 @@
+{- |
+
+File paths of interest to Dyre, and related values.
+
+-}
 module Config.Dyre.Paths where
 
 import System.Info                    (os, arch)
