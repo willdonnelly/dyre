@@ -4,5 +4,5 @@ import System.Process (callCommand)
 
 main :: IO ()
 main = do
-  setCurrentDirectory ("Tests")
+  setCurrentDirectory "Tests"
   callCommand ("." </> "allTests.sh")

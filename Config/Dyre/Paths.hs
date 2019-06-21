@@ -43,5 +43,5 @@ maybeModTime :: FilePath -> IO (Maybe UTCTime)
 maybeModTime path = do
     fileExists <- doesFileExist path
     if fileExists
-       then fmap Just $ getModificationTime path
+       then Just <$> getModificationTime path
        else return Nothing

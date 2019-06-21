@@ -112,14 +112,12 @@ customOptions otherArgs = do
                      Nothing -> getArgs
                      Just oa -> return oa
     -- Combine the other arguments with the Dyre-specific ones
-    let args = mainArgs ++ (filter (not . null) $
-            [ if debugMode then "--dyre-debug" else ""
-            , case stateFile of
-                   Nothing -> ""
-                   Just sf -> "--dyre-state-persist=" ++ sf
-            , "--dyre-master-binary=" ++ fromMaybe (error "'dyre' data-store doesn't exist (in Config.Dyre.Options.customOptions)") masterPath
-            ])
-    return args
+    pure $ mainArgs ++ concat
+        [ ["--dyre-debug" | debugMode]
+        , ["--dyre-state-persist=" ++ sf | Just sf <- [stateFile]]
+        , [ "--dyre-master-binary="
+            ++ fromMaybe (error "'dyre' data-store doesn't exist (in Config.Dyre.Options.customOptions)") masterPath]
+        ]
 
 -- | Look for the given flag in the argument array, and store
 --   its value under the given name if it exists.

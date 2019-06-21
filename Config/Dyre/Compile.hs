@@ -4,14 +4,13 @@ deals with error handling, and not the compilation itself /per se/.
 -}
 module Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString ) where
 
-import System.IO         ( openFile, hClose, IOMode(..) )
+import System.IO         ( IOMode(WriteMode), withFile )
 import System.Exit       ( ExitCode(..) )
 import System.Process    ( runProcess, waitForProcess )
 import System.FilePath   ( (</>), takeDirectory, (<.>), replaceExtension )
 import System.Directory  ( getCurrentDirectory, doesFileExist
                          , createDirectoryIfMissing
                          , renameFile, removeFile )
-import Control.Exception ( bracket )
 
 import Config.Dyre.Paths  ( getPaths )
 import Config.Dyre.Params
@@ -48,7 +47,7 @@ customCompile params@Params{statusOut = output} = do
 
     -- Compile occurs in here
     errFile <- getErrorPath params
-    result <- bracket (openFile errFile WriteMode) hClose $ \errHandle -> do
+    result <- withFile errFile WriteMode $ \errHandle -> do
         flags <- makeFlags params configFile tempBinary cacheDir libsDir
         stackYaml <- do
           let stackYamlPath = takeDirectory configFile </> "stack.yaml"
@@ -85,9 +84,7 @@ makeFlags Params{ghcOpts = flags, hidePackages = hides, forceRecomp = force, inc
           cfgFile tmpFile cacheDir libsDir = do
     currentDir <- getCurrentDirectory
     return . concat $ [ ["-v0", "-i" ++ libsDir]
-                      , if includeCurDir
-                          then ["-i" ++ currentDir]
-                          else [] 
+                      , ["-i" ++ currentDir | includeCurDir]
                       , ["-outputdir", cacheDir]
                       , prefix "-hide-package" hides, flags
                       , ["--make", cfgFile, "-o", tmpFile <.> "tmp"]

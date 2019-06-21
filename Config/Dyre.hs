@@ -103,6 +103,7 @@ module Config.Dyre
     , defaultParams
   ) where
 
+import Data.Maybe ( isJust )
 import System.IO           ( hPutStrLn, stderr )
 import System.Directory    ( doesFileExist, canonicalizePath
                            , getDirectoryContents, doesDirectoryExist )
@@ -168,7 +169,7 @@ wrapMain params cfg = withDyreOptions params $
         (thisBinary,tempBinary,configFile,_,libsDir) <- getPaths params
 
         confTime <- maybeModTime configFile
-        let confExists = confTime /= Nothing
+        let confExists = isJust confTime
 
         denyReconf  <- getDenyReconf
         forceReconf <- getForceReconf
@@ -183,11 +184,10 @@ wrapMain params cfg = withDyreOptions params $
             libTimes <- mapM maybeModTime libFiles
             thisTime <- maybeModTime thisBinary
             tempTime <- maybeModTime tempBinary
-            pure $ or
-              [ tempTime < confTime  -- config newer than custom bin
-              , tempTime < thisTime  -- main bin newer than custom bin
-              , or . map (tempTime <) $ libTimes
-              ]
+            pure $
+              tempTime < confTime     -- config newer than custom bin
+              || tempTime < thisTime  -- main bin newer than custom bin
+              || any (tempTime <) libTimes
 
         when doReconf (customCompile params)
 
@@ -270,10 +270,9 @@ handleRTSOptions :: RTSOptionHandling -> IO [String]
 handleRTSOptions h = do fargs <- getFullArgs
                         args  <- getArgs
                         let rtsArgs = editRTSOptions (filterRTSArgs fargs) h
-                        assertM $ not $ "--RTS" `elem` rtsArgs
-                        case rtsArgs of
-                          [] -> if not $ "+RTS" `elem` args
-                                  then return args -- cleaner output
-                                  else return $ "--RTS":args
-                          _  -> return $ ["+RTS"] ++ rtsArgs ++ ["--RTS"] ++ args
+                        assertM $ "--RTS" `notElem` rtsArgs
+                        pure $ case rtsArgs of
+                          [] | "+RTS" `elem` args -> "--RTS":args
+                             | otherwise          -> args  -- cleaner output
+                          _                       -> "+RTS" : rtsArgs ++ "--RTS" : args
 
