@@ -15,7 +15,7 @@ import System.Directory  ( getCurrentDirectory, doesFileExist
                          , createDirectoryIfMissing
                          , renameFile, removeFile )
 
-import Config.Dyre.Paths  ( getPaths )
+import Config.Dyre.Paths  ( PathsConfig(..), getPathsConfig )
 import Config.Dyre.Params
   ( Params(Params)
   , ghcOpts, hidePackages, forceRecomp, includeCurrentDirectory, statusOut
@@ -24,7 +24,7 @@ import Config.Dyre.Params
 -- | Return the path to the error file.
 getErrorPath :: Params cfgType a -> IO FilePath
 getErrorPath params = do
-    (_,_,_, cacheDir, _) <- getPaths params
+    cacheDir <- cacheDirectory <$> getPathsConfig params
     return $ cacheDir </> "errors.log"
 
 -- | If the error file exists and actually has some contents, return
@@ -44,16 +44,22 @@ getErrorString params = do
 --   containing any compiler output.
 customCompile :: Params cfgType a -> IO ()
 customCompile params@Params{statusOut = output} = do
-    (_, tempBinary, configFile, cacheDir, libsDir) <- getPaths params
-    output $ "Configuration '" ++ configFile ++  "' changed. Recompiling."
+    paths <- getPathsConfig params
+    let
+      tempBinary = customExecutable paths
+      configFile' = configFile paths
+      cacheDir = cacheDirectory paths
+      libsDir = libsDirectory paths
+
+    output $ "Configuration '" ++ configFile' ++  "' changed. Recompiling."
     createDirectoryIfMissing True cacheDir
 
     -- Compile occurs in here
     errFile <- getErrorPath params
     result <- withFile errFile WriteMode $ \errHandle -> do
-        flags <- makeFlags params configFile tempBinary cacheDir libsDir
+        flags <- makeFlags params configFile' tempBinary cacheDir libsDir
         stackYaml <- do
-          let stackYamlPath = takeDirectory configFile </> "stack.yaml"
+          let stackYamlPath = takeDirectory configFile' </> "stack.yaml"
           stackYamlExists <- doesFileExist stackYamlPath
           if stackYamlExists
             then return $ Just stackYamlPath

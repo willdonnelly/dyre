@@ -164,23 +164,23 @@ module Config.Dyre
     , defaultParams
   ) where
 
-import Data.Maybe ( isJust )
 import System.IO           ( hPutStrLn, stderr )
-import System.Directory    ( doesFileExist, canonicalizePath
-                           , getDirectoryContents, doesDirectoryExist )
-import System.FilePath     ( (</>) )
+import System.Directory    ( doesFileExist, canonicalizePath )
 import System.Environment  (getArgs)
 import GHC.Environment     (getFullArgs)
 import Control.Exception   (assert)
 
-import Control.Monad       ( when, filterM )
+import Control.Monad       ( when )
 
 import Config.Dyre.Params  ( Params(..), RTSOptionHandling(..) )
 import Config.Dyre.Compile ( customCompile, getErrorString )
 import Config.Dyre.Compat  ( customExec )
 import Config.Dyre.Options ( getForceReconf, getDenyReconf
                            , withDyreOptions )
-import Config.Dyre.Paths   ( getPaths, maybeModTime )
+import Config.Dyre.Paths
+  ( getPathsConfig, customExecutable, runningExecutable, configFile
+  , checkFilesModified
+  )
 
 -- | A set of reasonable defaults for configuring Dyre. The fields that
 --   have to be filled are 'projectName', 'realMain', and 'showError'
@@ -234,10 +234,11 @@ wrapMain params cfg = withDyreOptions params $
        then realMain params cfg
        else do
         -- Get the important paths
-        (thisBinary,tempBinary,configFile,_,libsDir) <- getPaths params
+        paths <- getPathsConfig params
+        let tempBinary = customExecutable paths
+            thisBinary = runningExecutable paths
 
-        confTime <- maybeModTime configFile
-        let confExists = isJust confTime
+        confExists <- doesFileExist (configFile paths)
 
         denyReconf  <- getDenyReconf
         forceReconf <- getForceReconf
@@ -246,16 +247,7 @@ wrapMain params cfg = withDyreOptions params $
           (False, _, _) -> pure False  -- no config file
           (_, True, _)  -> pure False  -- deny overrules force
           (_, _, True)  -> pure True   -- avoid timestamp/hash checks
-          (_, _, False) -> do
-            -- check modification times
-            libFiles <- recFiles libsDir
-            libTimes <- mapM maybeModTime libFiles
-            thisTime <- maybeModTime thisBinary
-            tempTime <- maybeModTime tempBinary
-            pure $
-              tempTime < confTime     -- config newer than custom bin
-              || tempTime < thisTime  -- main bin newer than custom bin
-              || any (tempTime <) libTimes
+          (_, _, False) -> checkFilesModified paths
 
         when doReconf (customCompile params)
 
@@ -301,19 +293,6 @@ wrapMain params cfg = withDyreOptions params $
                                   Just ed -> showError params cfg ed
             -- Enter the main program
             realMain params mainConfig
-
-recFiles :: FilePath -> IO [FilePath]
-recFiles d = do
-    exists <- doesDirectoryExist d
-    if exists
-       then do
-           nodes <- getDirectoryContents d
-           let nodes' = map (d </>) . filter (`notElem` [".", ".."]) $ nodes
-           files <- filterM doesFileExist nodes'
-           dirs  <- filterM doesDirectoryExist nodes'
-           subfiles <- concat `fmap` mapM recFiles dirs
-           return $ files ++ subfiles
-       else return []
 
 assertM :: Applicative f => Bool -> f ()
 assertM b = assert b (pure ())
