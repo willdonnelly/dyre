@@ -17,7 +17,7 @@ import Config.Dyre.Options
 
 -- | Return the paths to, respectively, the current binary, the custom
 --   binary, the config file, and the cache directory.
-getPaths :: Params c -> IO (FilePath, FilePath, FilePath, FilePath, FilePath)
+getPaths :: Params c r -> IO (FilePath, FilePath, FilePath, FilePath, FilePath)
 getPaths params@Params{projectName = pName} = do
     thisBinary <- getExecutablePath
     debugMode  <- getDebug

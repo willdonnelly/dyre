@@ -126,7 +126,7 @@ import Config.Dyre.Paths   ( getPaths, maybeModTime )
 --
 -- See also 'newParams' which takes the required fields as arguments.
 --
-defaultParams :: Params cfgType
+defaultParams :: Params cfgType a
 defaultParams = Params
     { projectName  = undefined
     , configCheck  = True
@@ -148,9 +148,9 @@ defaultParams = Params
 --
 newParams
   :: String                  -- ^ 'projectName'
-  -> (cfg -> IO ())          -- ^ 'realMain' function
+  -> (cfg -> IO a)          -- ^ 'realMain' function
   -> (cfg -> String -> cfg)  -- ^ 'showError' function
-  -> Params cfg
+  -> Params cfg a
 newParams name main err =
   defaultParams { projectName = name, realMain = main, showError = err }
 
@@ -158,7 +158,12 @@ newParams name main err =
 --   that it will be partially applied with its parameters to yield a @main@
 --   entry point, which will then be called by the @main@ function, as well
 --   as by any custom configurations.
-wrapMain :: Params cfgType -> cfgType -> IO ()
+--
+-- @wrapMain@ returns whatever value is returned by the @realMain@ function
+-- in the @params@ (if it returns at all).  In the common case this is @()@
+-- but you can use Dyre with any @IO@ action.
+--
+wrapMain :: Params cfgType a -> cfgType -> IO a
 wrapMain params cfg = withDyreOptions params $
     -- Allow the 'configCheck' parameter to disable all of Dyre's recompilation
     -- checks, in favor of simply proceeding ahead to the 'realMain' function.

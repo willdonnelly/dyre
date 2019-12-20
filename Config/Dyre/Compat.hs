@@ -55,7 +55,7 @@ customExec binary mArgs = do
          ExitFailure c -> c_ExitProcess (fromIntegral c)
 
 foreign import stdcall unsafe "winbase.h ExitProcess"
-    c_ExitProcess :: UINT -> IO ()
+    c_ExitProcess :: UINT -> IO a
 
 #else
 
@@ -109,7 +109,7 @@ getPIDString = fmap show getProcessID
 
 -- | Called whenever execution needs to be transferred over to
 --   a different binary.
-customExec :: FilePath -> Maybe [String] -> IO ()
+customExec :: FilePath -> Maybe [String] -> IO a
 
 -- | What it says on the tin. Gets the current PID as a string.
 --   Used to determine the name for the state file during restarts.

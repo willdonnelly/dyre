@@ -45,7 +45,7 @@ removeDyreOptions = filter $ not . prefixElem dyreArgs
 -- | Store Dyre's command-line options to the IO-Store "dyre",
 --   and then execute the provided IO action with all Dyre's
 --   options removed from the command-line arguments.
-withDyreOptions :: Params c -> IO a -> IO a
+withDyreOptions :: Params c r -> IO a -> IO a
 withDyreOptions Params{configCheck = check} action = withStore "dyre" $ do
     -- Pretty important
     args <- getArgs

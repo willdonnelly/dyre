@@ -11,7 +11,7 @@ module Config.Dyre.Params ( Params(..), RTSOptionHandling(..) ) where
 --   as 'Config.Dyre.newParams', you can get all the benefits of
 --   using Dyre to configure your program in only five or six lines of
 --   code.
-data Params cfgType = Params
+data Params cfgType a = Params
     { projectName  :: String
     -- ^ The name of the project. This needs to also be the name of
     --   the executable, and the name of the configuration file.
@@ -24,7 +24,7 @@ data Params cfgType = Params
     , cacheDir     :: Maybe (IO FilePath)
     -- ^ The directory to store build files in, including the final
     --   generated executable.
-    , realMain     :: cfgType -> IO ()
+    , realMain     :: cfgType -> IO a
     -- ^ The main function of the program. When Dyre has completed
     --   all of its recompilation, it passes the configuration data
     --   to this function and gets out of the way.

@@ -19,14 +19,14 @@ import Config.Dyre.Params
   )
 
 -- | Return the path to the error file.
-getErrorPath :: Params cfgType -> IO FilePath
+getErrorPath :: Params cfgType a -> IO FilePath
 getErrorPath params = do
     (_,_,_, cacheDir, _) <- getPaths params
     return $ cacheDir </> "errors.log"
 
 -- | If the error file exists and actually has some contents, return
 --   'Just' the error string. Otherwise return 'Nothing'.
-getErrorString :: Params cfgType -> IO (Maybe String)
+getErrorString :: Params cfgType a -> IO (Maybe String)
 getErrorString params = do
     errorPath   <- getErrorPath params
     errorsExist <- doesFileExist errorPath
@@ -39,7 +39,7 @@ getErrorString params = do
 
 -- | Attempts to compile the configuration file. Will return a string
 --   containing any compiler output.
-customCompile :: Params cfgType -> IO ()
+customCompile :: Params cfgType a -> IO ()
 customCompile params@Params{statusOut = output} = do
     (_, tempBinary, configFile, cacheDir, libsDir) <- getPaths params
     output $ "Configuration '" ++ configFile ++  "' changed. Recompiling."
@@ -78,7 +78,7 @@ customCompile params@Params{statusOut = output} = do
         output "Error occurred while loading configuration file."
 
 -- | Assemble the arguments to GHC so everything compiles right.
-makeFlags :: Params cfgType -> FilePath -> FilePath -> FilePath
+makeFlags :: Params cfgType a -> FilePath -> FilePath -> FilePath
           -> FilePath -> IO [String]
 makeFlags Params{ghcOpts = flags, hidePackages = hides, forceRecomp = force, includeCurrentDirectory = includeCurDir}
           cfgFile tmpFile cacheDir libsDir = do
