@@ -92,6 +92,22 @@ configuration exists.  If so, it runs a custom executable.  Dyre
 (re)compiles and caches the custom executable the first time it sees
 the custom config or whenever the custom config has changed.
 
+If a custom configuration grows large, you can extract parts of it
+into one or more files under @lib/@.  For example:
+
+@
+-- ~\/.config\/dyreExample\/dyreExample.hs --
+import DyreExample
+import Message
+main = dyreExample $ defaultConfig { message = Message.msg }
+@
+
+@
+-- ~\/.config\/dyreExample\/lib/Message.hs --
+module Message where
+msg = "Dyre Example v0.1 (Modified)"
+@
+
 = Configuring Dyre
 
 Program authors configure Dyre using the 'Params' type.  This type
