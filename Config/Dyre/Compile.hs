@@ -4,6 +4,7 @@ deals with error handling, and not the compilation itself /per se/.
 -}
 module Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString ) where
 
+import Control.Monad (when)
 import System.IO         ( IOMode(WriteMode), withFile )
 import System.Exit       ( ExitCode(..) )
 import System.Process    ( runProcess, waitForProcess )
@@ -69,12 +70,12 @@ customCompile params@Params{statusOut = output} = do
         -- GHC sometimes prints to stderr, even on success.
         -- Other parts of dyre infer error if error file exists
         -- and is non-empty, so remove it.
-        removeFile errFile
+        removeFileIfExists errFile
 
         output "Program reconfiguration successful."
 
       _ -> do
-        removeFile tempBinary
+        removeFileIfExists tempBinary
         output "Error occurred while loading configuration file."
 
 -- | Assemble the arguments to GHC so everything compiles right.
@@ -92,3 +93,7 @@ makeFlags Params{ghcOpts = flags, hidePackages = hides, forceRecomp = force, inc
                       ]
   where prefix y = concatMap $ \x -> [y,x]
 
+removeFileIfExists :: FilePath -> IO ()
+removeFileIfExists path = do
+  exists <- doesFileExist path
+  when exists $ removeFile path
