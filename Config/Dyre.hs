@@ -18,11 +18,18 @@ program (recompiling if applicable), and persist state across restarts,
 but it has no impact whatsoever on the rest of the library whether it
 is used or not.
 
-A full example of using most of Dyre's major features is as follows:
+= Writing a program that uses Dyre
+
+The following example program uses most of Dyre's major features:
 
 @
 -- DyreExample.hs --
-module DyreExample where
+module DyreExample
+  ( Config(..)
+  , defaultConfig
+  , dyreExample
+  )
+where
 
 import qualified "Config.Dyre" as Dyre
 import "Config.Dyre.Relaunch"
@@ -44,20 +51,24 @@ realMain Config{message = message, errorMsg = errorMsg } = do
          Nothing -> return ()
          Just em -> putStrLn $ "Error: " ++ em
     putStrLn message
-    mapM putStrLn . reverse $ buffer
-    putStr "> " >> hFlush stdout
+    traverse putStrLn . reverse $ buffer
+    putStr "> " *> hFlush stdout
     input <- getLine
     case input of
          "exit" -> return ()
          "quit" -> return ()
          other  -> 'Config.Dyre.Relaunch.relaunchWithTextState' (State $ other:buffer) Nothing
 
-dyreExample = Dyre.'Dyre.wrapMain' $ Dyre.'Dyre.newParams' "dyreExample" realMain showError
+dyreExample = Dyre.'Config.Dyre.wrapMain' $ Dyre.'Config.Dyre.newParams' "dyreExample" realMain showError
 @
 
-Notice that all of the program logic is contained in the @DyreExample@
-module. The main module of the program is absolutely trivial, being
-essentially just the default configuration for the program:
+All of the program logic is contained in the @DyreExample@ module.
+The module exports the 'Config' data type, a @defaultConfig@, and
+the @dyreExample@ function which, when applied to a 'Config',
+returns an @(IO a)@ value to be used as @main@.
+
+The @Main@ module of the program is trivial.  All that is required
+is to apply @dyreExample@ to the default configuration:
 
 @
 -- Main.hs --
@@ -65,8 +76,10 @@ import DyreExample
 main = dyreExample defaultConfig
 @
 
-The user can then create a custom configuration file, which
-overrides some or all of the default configuration:
+= Custom program configuration
+
+Users can create a custom configuration file that overrides some or
+all of the default configuration:
 
 @
 -- ~\/.config\/dyreExample\/dyreExample.hs --
@@ -74,26 +87,47 @@ import DyreExample
 main = dyreExample $ defaultConfig { message = "Dyre Example v0.1 (Modified)" }
 @
 
-When reading the above program, notice that the majority of the
-code is simply /program logic/. Dyre is designed to intelligently
-handle recompilation with a minimum of programmer work.
+When a program that uses Dyre starts, Dyre checks to see if a custom
+configuration exists.  If so, it runs a custom executable.  Dyre
+(re)compiles and caches the custom executable the first time it sees
+the custom config or whenever the custom config has changed.
 
-Some mention should be made of Dyre's defaults. The 'newParams'
-function used in the example constructs a 'Params' with the required
-values as given, and reasonable default values for other
-configuration items.  For documentation of the
-parameters, see 'Params'.
+= Configuring Dyre
 
-In the absence of any customization, Dyre will search for configuration
-files in @$XDG_CONFIG_HOME\/\<appName\>\/\<appName\>.hs@, and will store
-cache files in @$XDG_CACHE_HOME\/\<appName\>\/@ directory. The module
-"System.Environment.XDG" is used for this purpose, which also provides
-analogous behaviour on Windows.
+Program authors configure Dyre using the 'Params' type.  This type
+controls Dyre's behaviour, not the main program logic (the example
+uses the @Config@ type for that).
 
-The above example can be tested by running @Main.hs@ with @runhaskell@,
-and will detect custom configurations and recompile correctly even when
-the library isn't installed, so long as it is in the current directory
-when run.
+Use 'newParams' to construct a 'Params' value.  The three arguments are:
+
+- /Application name/ (a @String@).  This affects the names of files and directories
+  that Dyre uses for config, cache and logging.
+
+- The /real main/ function of the program, which has type
+  @(cfgType -> IO a)@.  @cfgType@ is the main program config type,
+  and @a@ is usually @()@.
+
+- The /show error/ function, which has type @(cfgType -> String ->
+  cfgType)@.  If compiling the custom program fails, Dyre uses this
+  function to set the compiler output in the main program's
+  configuration.  The main program can then display the error string
+  to the user, or handle it however the author sees fit.
+
+The 'Params' type has several other fields for modifying Dyre's
+behaviour.  'newParams' uses reasonable defaults, but behaviours you
+can change include:
+
+- Where to look for custom configuration ('configDir').  By default
+  Dyre will look for @$XDG_CONFIG_HOME\/\<appName\>\/\<appName\>.hs@,
+
+- Where to cache the custom executable and other files ('cacheDir').
+  By default Dyre will use @$XDG_CACHE_HOME\/\<appName\>\/@.
+
+- Extra options to pass to GHC when compiling the custom executable
+  ('ghcOpts').  Default: none.
+
+See 'Params' for descriptions of all the fields.
+
 -}
 module Config.Dyre
   (
@@ -122,9 +156,11 @@ import Config.Dyre.Options ( getForceReconf, getDenyReconf
 import Config.Dyre.Paths   ( getPaths, maybeModTime )
 
 -- | A set of reasonable defaults for configuring Dyre. The fields that
---   have to be filled are 'projectName', 'realMain', and 'showError'.
+--   have to be filled are 'projectName', 'realMain', and 'showError'
+--   (because their initial value is @undefined@).
 --
--- See also 'newParams' which takes the required fields as arguments.
+-- Deprecated in favour of 'newParams' which takes the required
+-- fields as arguments.
 --
 defaultParams :: Params cfgType a
 defaultParams = Params
