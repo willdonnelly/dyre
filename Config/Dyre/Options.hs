@@ -108,9 +108,8 @@ customOptions otherArgs = do
     masterPath <- getMasterBinary
     stateFile  <- getStatePersist
     debugMode  <- getDebug
-    mainArgs <- case otherArgs of
-                     Nothing -> getArgs
-                     Just oa -> return oa
+    mainArgs <- maybe getArgs pure otherArgs
+
     -- Combine the other arguments with the Dyre-specific ones
     pure $ mainArgs ++ concat
         [ ["--dyre-debug" | debugMode]
