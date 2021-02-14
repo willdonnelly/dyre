@@ -5,7 +5,9 @@ deals with error handling, and not the compilation itself /per se/.
 module Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString ) where
 
 import Control.Monad (when)
+import Data.Maybe (fromMaybe)
 import System.IO         ( IOMode(WriteMode), withFile )
+import System.Environment (lookupEnv)
 import System.Exit       ( ExitCode(..) )
 import System.Process    ( runProcess, waitForProcess )
 import System.FilePath   ( (</>), takeDirectory, (<.>), replaceExtension )
@@ -56,7 +58,9 @@ customCompile params@Params{statusOut = output} = do
           if stackYamlExists
             then return $ Just stackYamlPath
             else return Nothing
-        ghcProc <- maybe (runProcess "ghc" flags (Just cacheDir) Nothing
+
+        hc <- fromMaybe "ghc" <$> lookupEnv "HC"
+        ghcProc <- maybe (runProcess hc flags (Just cacheDir) Nothing
                               Nothing Nothing (Just errHandle))
                          (\stackYaml' -> runProcess "stack" ("ghc" : "--stack-yaml" : stackYaml' : "--" : flags)
                               Nothing Nothing Nothing Nothing (Just errHandle))

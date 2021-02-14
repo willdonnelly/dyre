@@ -108,6 +108,17 @@ module Message where
 msg = "Dyre Example v0.1 (Modified)"
 @
 
+== Specifying the compiler
+
+If the compiler that Dyre should use is not available as @ghc@, set
+the @HC@ environment variable when running the main program:
+
+@
+export HC=\/opt\/ghc\/$GHC_VERSION\/bin\/ghc
+dyreExample  # Dyre will use $HC for recompilation
+@
+
+
 = Configuring Dyre
 
 Program authors configure Dyre using the 'Params' type.  This type
