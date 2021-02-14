@@ -17,7 +17,7 @@ cd working
 
 ### TEST A ###
 cp ../RecompileRelaunchTest.hs ../Main.hs ../recompileRelaunchTest.hs .
-ghc --make Main.hs -o recompileRelaunch 2> /dev/null
+$HC --make Main.hs -o recompileRelaunch 2> /dev/null
 OUTPUT_A=`./recompileRelaunch --dyre-debug --deny-reconf`
 assert "$OUTPUT_A" "Testing....Successful" "A"
 

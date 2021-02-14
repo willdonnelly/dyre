@@ -2,6 +2,10 @@
 
 # Run all test scripts for Dyre.
 
+if [ -z "$HC" ]; then
+    export HC=ghc
+fi
+
 for TESTDIR in `find . -mindepth 1 -type d`; do
     echo "Running $TESTDIR"
     cd $TESTDIR

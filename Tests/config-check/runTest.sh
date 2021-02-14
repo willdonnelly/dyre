@@ -20,7 +20,7 @@ cd working
 ### TEST A ###
 cp ../ConfigCheckTest.hs ../Main.hs .
 cp ../configCheckTestA.hs ./configCheckTest.hs
-ghc --make Main.hs -o configCheck
+$HC --make Main.hs -o configCheck
 OUTPUT_A=`./configCheck --dyre-debug`
 assert "$OUTPUT_A" "custom-a" "A"
 

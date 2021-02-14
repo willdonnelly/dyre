@@ -24,7 +24,7 @@ cd working
 ### TEST A ###
 cp ../BasicTest.hs ../Main.hs .
 echo "attempting to make"
-ghc --make Main.hs -o basic 2> /dev/null
+$HC --make Main.hs -o basic 2> /dev/null
 OUTPUT_A=`./basic --dyre-debug`
 assert "$OUTPUT_A" "Basic Test Version 1.0 - 3" "A"
 
