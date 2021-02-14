@@ -6,16 +6,7 @@
 # Tests restarting a custom configuration.
 # Tests compilation error reporting.
 
-# Assert the equality of two strings.
-assert() {
-    echo "$1" >&2
-    if [ "$1" != "$2" ]; then
-        echo "Failed test $3";
-	echo " expected $2"
-	echo "      got $1"
-        exit 1;
-    fi
-}
+. ../subr.sh
 
 ### SETUP ###
 mkdir -p working
@@ -24,7 +15,7 @@ cd working
 ### TEST A ###
 cp ../BasicTest.hs ../Main.hs .
 echo "attempting to make"
-$HC --make Main.hs -o basic 2> /dev/null
+$HC --make Main.hs -o basic || die "compilation failed"
 OUTPUT_A=`./basic --dyre-debug`
 assert "$OUTPUT_A" "Basic Test Version 1.0 - 3" "A"
 

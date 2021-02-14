@@ -3,21 +3,14 @@
 # Tests Dyre's ability to recompile a custom configuration
 # upon relaunch, and restore the state again after.
 
-# Assert the equality of two strings.
-assert() {
-    echo "$1" >&2
-    if [ "$1" != "$2" ]; then
-        echo "Failed test $3";
-        exit 1;
-    fi
-}
+. ../subr.sh
 
 mkdir -p working
 cd working
 
 ### TEST A ###
 cp ../RecompileRelaunchTest.hs ../Main.hs ../recompileRelaunchTest.hs .
-$HC --make Main.hs -o recompileRelaunch 2> /dev/null
+$HC --make Main.hs -o recompileRelaunch || die "compilation failed"
 OUTPUT_A=`./recompileRelaunch --dyre-debug --deny-reconf`
 assert "$OUTPUT_A" "Testing....Successful" "A"
 
