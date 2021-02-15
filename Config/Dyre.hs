@@ -197,6 +197,7 @@ defaultParams = Params
     , cacheDir     = Nothing
     , realMain     = undefined
     , showError    = undefined
+    , includeDirs  = []
     , hidePackages = []
     , ghcOpts      = []
     , forceRecomp  = True

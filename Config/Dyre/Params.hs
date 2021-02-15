@@ -32,6 +32,10 @@ data Params cfgType a = Params
     -- ^ This function is used to display error messages that occur
     --   during recompilation, by allowing the program to modify its
     --   initial configuration.
+    , includeDirs  :: [FilePath]
+    -- ^ Optional extra include dirs to use during compilation.
+    --   To support installation via cabal-install, include the
+    --   path returned from @Paths_\<appName\>.getLibDir@.
     , hidePackages :: [String]
     -- ^ Packages that need to be hidden during compilation
     , ghcOpts      :: [String]
