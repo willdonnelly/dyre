@@ -108,6 +108,26 @@ module Message where
 msg = "Dyre Example v0.1 (Modified)"
 @
 
+== Working with the Cabal store
+
+For a Dyre-enabled program to work when installed via @cabal
+install@, it needs to add its library directory as an extra include
+directory for compilation.  The library /package name/ __must__
+match the Dyre 'projectName' for this to work.  For example:
+
+@
+import Paths_dyreExample (getLibDir)
+
+dyreExample cfg = do
+  libdir <- getLibDir
+  let params = (Dyre.'Config.Dyre.newParams' "dyreExample" realMain showError)
+        { Dyre.'Config.Dyre.includeDirs' = [libdir] }
+  Dyre.'Config.Dyre.wrapMain' params cfg
+@
+
+See also the Cabal
+<https://cabal.readthedocs.io/en/3.2/developing-packages.html#accessing-data-files-from-package-code Paths_pkgname feature documentation>.
+
 == Specifying the compiler
 
 If the compiler that Dyre should use is not available as @ghc@, set
