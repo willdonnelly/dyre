@@ -4,6 +4,7 @@ deals with error handling, and not the compilation itself /per se/.
 -}
 module Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString ) where
 
+import Control.Concurrent ( rtsSupportsBoundThreads )
 import Control.Monad (when)
 import Data.Maybe (fromMaybe)
 import System.IO         ( IOMode(WriteMode), withFile )
@@ -98,6 +99,11 @@ makeFlags params cfgFile tmpFile cacheDir libsDir = do
     , ["-i" ++ currentDir | includeCurrentDirectory params]
     , prefix "-hide-package" (hidePackages params)
     , ghcOpts params
+
+    -- if the current process uses threaded RTS,
+    -- also compile custom executable with -threaded
+    , [ "-threaded" | rtsSupportsBoundThreads ]
+
     , ["--make", cfgFile, "-outputdir", cacheDir, "-o", tmpFile <.> "tmp"]
     , ["-fforce-recomp" | forceRecomp params] -- Only if force is true
     ]
