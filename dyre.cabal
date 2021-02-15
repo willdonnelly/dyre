@@ -33,6 +33,8 @@ extra-source-files:
     Tests/config-check/*.sh
     Tests/recompile-relaunch/*.hs
     Tests/recompile-relaunch/*.sh
+    Tests/threaded/*.hs
+    Tests/threaded/*.sh
 
 library
   ghc-options: -Wall
