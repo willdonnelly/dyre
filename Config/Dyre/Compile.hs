@@ -91,16 +91,16 @@ customCompile params@Params{statusOut = output} = do
 -- | Assemble the arguments to GHC so everything compiles right.
 makeFlags :: Params cfgType a -> FilePath -> FilePath -> FilePath
           -> FilePath -> IO [String]
-makeFlags Params{ghcOpts = flags, hidePackages = hides, forceRecomp = force, includeCurrentDirectory = includeCurDir}
-          cfgFile tmpFile cacheDir libsDir = do
-    currentDir <- getCurrentDirectory
-    return . concat $ [ ["-v0", "-i" ++ libsDir]
-                      , ["-i" ++ currentDir | includeCurDir]
-                      , ["-outputdir", cacheDir]
-                      , prefix "-hide-package" hides, flags
-                      , ["--make", cfgFile, "-o", tmpFile <.> "tmp"]
-                      , ["-fforce-recomp" | force] -- Only if force is true
-                      ]
+makeFlags params cfgFile tmpFile cacheDir libsDir = do
+  currentDir <- getCurrentDirectory
+  pure . concat $
+    [ ["-v0", "-i" ++ libsDir]
+    , ["-i" ++ currentDir | includeCurrentDirectory params]
+    , prefix "-hide-package" (hidePackages params)
+    , ghcOpts params
+    , ["--make", cfgFile, "-outputdir", cacheDir, "-o", tmpFile <.> "tmp"]
+    , ["-fforce-recomp" | forceRecomp params] -- Only if force is true
+    ]
   where prefix y = concatMap $ \x -> [y,x]
 
 removeFileIfExists :: FilePath -> IO ()
