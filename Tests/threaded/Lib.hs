@@ -1,4 +1,4 @@
-module ThreadedTest where
+module Lib where
 
 import Control.Concurrent (rtsSupportsBoundThreads)
 import qualified Config.Dyre as Dyre

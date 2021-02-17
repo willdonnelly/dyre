@@ -1,2 +1,2 @@
-import BasicTest
+import Lib
 main = basicTest defaultConfig

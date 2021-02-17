@@ -9,7 +9,7 @@ mkdir -p working
 cd working
 
 ### TEST A ###
-cp ../RecompileRelaunchTest.hs ../Main.hs ../recompileRelaunchTest.hs .
+cp ../Lib.hs ../Main.hs ../recompileRelaunchTest.hs .
 $HC --make Main.hs -o recompileRelaunch || die "compilation failed"
 OUTPUT_A=`./recompileRelaunch --dyre-debug --deny-reconf`
 assert "$OUTPUT_A" "Testing....Successful" "A"

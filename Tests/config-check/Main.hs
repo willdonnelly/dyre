@@ -1,2 +1,2 @@
-import ConfigCheckTest
+import Lib
 main = configCheckMain "main"

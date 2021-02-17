@@ -9,7 +9,7 @@ mkdir -p working
 cd working
 
 ### TEST A ###
-cp ../ThreadedTest.hs ../Main.hs ../threadedTest.hs .
+cp ../Lib.hs ../Main.hs ../threadedTest.hs .
 $HC -threaded --make Main.hs -o threadedTest || die "compilation failed"
 OUTPUT_A=`./threadedTest --dyre-debug`
 assert "$OUTPUT_A" "custom True" "A"

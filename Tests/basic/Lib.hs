@@ -1,4 +1,4 @@
-module BasicTest where
+module Lib where
 
 import qualified Config.Dyre as Dyre
 

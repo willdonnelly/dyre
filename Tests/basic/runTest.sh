@@ -13,7 +13,7 @@ mkdir -p working
 cd working
 
 ### TEST A ###
-cp ../BasicTest.hs ../Main.hs .
+cp ../Lib.hs ../Main.hs .
 echo "attempting to make"
 $HC --make Main.hs -o basic || die "compilation failed"
 OUTPUT_A=`./basic --dyre-debug`

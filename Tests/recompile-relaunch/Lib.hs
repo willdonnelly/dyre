@@ -1,4 +1,4 @@
-module RecompileRelaunchTest where
+module Lib where
 
 import qualified Config.Dyre as Dyre
 import Config.Dyre.Relaunch

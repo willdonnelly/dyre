@@ -9,7 +9,7 @@ mkdir -p working
 cd working
 
 ### TEST A ###
-cp ../ConfigCheckTest.hs ../Main.hs .
+cp ../Lib.hs ../Main.hs .
 cp ../configCheckTestA.hs ./configCheckTest.hs
 $HC --make Main.hs -o configCheck || die "compilation failed"
 OUTPUT_A=`./configCheck --dyre-debug`

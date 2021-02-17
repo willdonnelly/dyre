@@ -1,4 +1,4 @@
-module ConfigCheckTest where
+module Lib where
 
 import qualified Config.Dyre as Dyre
 import System.IO

@@ -1,2 +1,2 @@
-import RecompileRelaunchTest
+import Lib
 main = recompileRelaunchTest "Testing.."
