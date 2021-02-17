@@ -9,3 +9,12 @@ jobs:
       - uses: haskell/actions/setup@v1
       - run: cabal build
       - run: cabal test
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: haskell/actions/setup@v1
+      - run: cabal build
+      - run: cabal test
