@@ -8,7 +8,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: haskell/actions/setup@v1
       - run: cabal build
-      - run: cabal test
+      - run: cabal test --test-show-details=direct
 
   windows:
     name: Windows
@@ -17,4 +17,4 @@ jobs:
       - uses: actions/checkout@v2
       - uses: haskell/actions/setup@v1
       - run: cabal build
-      - run: cabal test
+      - run: cabal test --test-show-details=direct
