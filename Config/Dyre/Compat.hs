@@ -1,7 +1,17 @@
 {-# LANGUAGE CPP #-}
 
 #if defined(mingw32_HOST_OS) || defined(__MINGW32__)
+
 {-# LANGUAGE ForeignFunctionInterface #-}
+
+#if defined(i386_HOST_ARCH)
+#define WINDOWS_CCONV stdcall
+#elif defined(x86_64_HOST_ARCH)
+#define WINDOWS_CCONV ccall
+#else
+#error Unknown mingw32 arch
+#endif
+
 #endif
 
 
@@ -24,7 +34,7 @@ import System.Mem
 
 -- This can be removed as soon as a 'getProcessID' function
 -- gets added to 'System.Win32'
-foreign import stdcall unsafe "winbase.h GetCurrentProcessId"
+foreign import WINDOWS_CCONV unsafe "winbase.h GetCurrentProcessId"
     c_GetCurrentProcessID :: IO DWORD
 getPIDString = fmap show c_GetCurrentProcessID
 
@@ -56,7 +66,7 @@ customExec binary mArgs = do
     -- can't reach; this is just for polymoprhic result
     let a = a in a
 
-foreign import stdcall unsafe "winbase.h ExitProcess"
+foreign import WINDOWS_CCONV unsafe "winbase.h ExitProcess"
     c_ExitProcess :: UINT -> IO ()
 
 #else
