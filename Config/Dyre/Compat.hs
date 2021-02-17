@@ -53,9 +53,11 @@ customExec binary mArgs = do
     case exitCode of
          ExitSuccess -> c_ExitProcess 0
          ExitFailure c -> c_ExitProcess (fromIntegral c)
+    -- can't reach; this is just for polymoprhic result
+    let a = a in a
 
 foreign import stdcall unsafe "winbase.h ExitProcess"
-    c_ExitProcess :: UINT -> IO a
+    c_ExitProcess :: UINT -> IO ()
 
 #else
 
