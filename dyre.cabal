@@ -73,6 +73,5 @@ test-suite tests
   build-depends:
     base
     , directory >= 1.2.0.0
-    , filepath
     , process
     , dyre
