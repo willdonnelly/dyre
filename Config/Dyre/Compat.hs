@@ -50,17 +50,12 @@ customExec binary mArgs = do
     -- Do some garbage collection in an optimistic attempt to
     -- offset some of the memory we waste here.
     performGC
+
     -- And to prevent terminal apps from losing IO, we have to
     -- sit around waiting for the child to exit.
-    exitCode <- waitForProcess child
-    case exitCode of
-         ExitSuccess -> c_ExitProcess 0
-         ExitFailure c -> c_ExitProcess (fromIntegral c)
-    -- can't reach; this is just for polymoprhic result
-    let a = a in a
-
-foreign import WINDOWS_CCONV unsafe "winbase.h ExitProcess"
-    c_ExitProcess :: UINT -> IO ()
+    --
+    -- 'exitWith' will flush stdout and stderr
+    waitForProcess child >>= exitWith
 
 #else
 
