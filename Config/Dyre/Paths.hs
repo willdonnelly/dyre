@@ -8,7 +8,8 @@ module Config.Dyre.Paths where
 import Control.Monad ( filterM )
 import Data.List ( isSuffixOf )
 import System.Info                    (os, arch)
-import System.FilePath                ( (</>), (<.>), takeExtension )
+import System.FilePath
+  ( (</>), (<.>), takeExtension, splitExtension )
 import System.Directory
   ( doesDirectoryExist
   , doesFileExist
@@ -40,6 +41,13 @@ data PathsConfig = PathsConfig
   -- file and other metadata get stored.
   }
 
+-- | Determine a file name for the compiler to write to, based on
+-- the 'customExecutable' path.
+--
+outputExecutable :: FilePath -> FilePath
+outputExecutable path =
+  let (base, ext) = splitExtension path
+  in base <.> "tmp" <.> ext
 
 -- | Return a 'PathsConfig', which records the current binary, the custom
 --   binary, the config file, and the cache directory.

@@ -13,15 +13,12 @@ import System.Environment (lookupEnv)
 import System.Exit       ( ExitCode(..) )
 import System.Process    ( runProcess, waitForProcess )
 import System.FilePath
-  ( (</>), (<.>)
-  , dropTrailingPathSeparator, replaceExtension
-  , splitPath, takeDirectory
-  )
+  ( (</>), dropTrailingPathSeparator, splitPath, takeDirectory )
 import System.Directory  ( getCurrentDirectory, doesFileExist
                          , createDirectoryIfMissing
                          , renameFile, removeFile )
 
-import Config.Dyre.Paths  ( PathsConfig(..), getPathsConfig )
+import Config.Dyre.Paths ( PathsConfig(..), getPathsConfig, outputExecutable )
 import Config.Dyre.Params ( Params(..) )
 
 -- | Return the path to the error file.
@@ -49,6 +46,7 @@ customCompile params@Params{statusOut = output} = do
     paths <- getPathsConfig params
     let
       tempBinary = customExecutable paths
+      outFile = outputExecutable tempBinary
       configFile' = configFile paths
       cacheDir' = cacheDirectory paths
       libsDir = libsDirectory paths
@@ -59,7 +57,7 @@ customCompile params@Params{statusOut = output} = do
     -- Compile occurs in here
     errFile <- getErrorPath params
     result <- withFile errFile WriteMode $ \errHandle -> do
-        flags <- makeFlags params configFile' tempBinary cacheDir' libsDir
+        flags <- makeFlags params configFile' outFile cacheDir' libsDir
         stackYaml <- do
           let stackYamlPath = takeDirectory configFile' </> "stack.yaml"
           stackYamlExists <- doesFileExist stackYamlPath
@@ -77,7 +75,7 @@ customCompile params@Params{statusOut = output} = do
 
     case result of
       ExitSuccess -> do
-        renameFile (replaceExtension tempBinary "tmp") tempBinary
+        renameFile outFile tempBinary
 
         -- GHC sometimes prints to stderr, even on success.
         -- Other parts of dyre infer error if error file exists
@@ -93,7 +91,7 @@ customCompile params@Params{statusOut = output} = do
 -- | Assemble the arguments to GHC so everything compiles right.
 makeFlags :: Params cfgType a -> FilePath -> FilePath -> FilePath
           -> FilePath -> IO [String]
-makeFlags params cfgFile tmpFile cacheDir' libsDir = do
+makeFlags params cfgFile outFile cacheDir' libsDir = do
   currentDir <- getCurrentDirectory
   pure . concat $
     [ ["-v0", "-i" ++ libsDir]
@@ -114,7 +112,7 @@ makeFlags params cfgFile tmpFile cacheDir' libsDir = do
     -- also compile custom executable with -threaded
     , [ "-threaded" | rtsSupportsBoundThreads ]
 
-    , ["--make", cfgFile, "-outputdir", cacheDir', "-o", tmpFile <.> "tmp"]
+    , ["--make", cfgFile, "-outputdir", cacheDir', "-o", outFile]
     , ["-fforce-recomp" | forceRecomp params] -- Only if force is true
     ]
   where prefix y = concatMap $ \x -> [y,x]
