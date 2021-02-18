@@ -44,8 +44,7 @@ customExec binary mArgs = do
     -- is too braindead to provide an exec() system call for us
     -- to use, we simply create a new process that inherits
     -- the stdio handles.
-    (_,_,_,child) <- createProcess $ (proc binary args)
-      { close_fds = True }
+    (_,_,_,child) <- createProcess $ proc binary args
 
     -- Do some garbage collection in an optimistic attempt to
     -- offset some of the memory we waste here.
