@@ -26,11 +26,7 @@ A complete, working example can be seen here:
         putStrLn "Entered Main Function"
         putStrLn message
 
-    dyreExample = Dyre.wrapMain Dyre.defaultParams
-        { Dyre.projectName  = "dyreExample"
-        , Dyre.showError    = confError
-        , Dyre.realMain     = realMain
-        }
+    dyreExample = Dyre.wrapMain $ newParams "dyreExample" realMain confError
 
 This code defines a simple library which will display a message on stdout. It
 uses Dyre to provide configuration of what exactly the message is. The default
@@ -54,9 +50,7 @@ configuration.
 
 The `Dyre.wrapMain` function is how Dyre is meant to be invoked. It is passed
 a set of parameters which configure how it operates. Most parameters have some
-good defaults defined in `Dyre.defaultParams`, except for the three defined in
-the above code. For a program to successfully run, those three parameters must
-be overridden.
+good defaults, but can be overriden on the record produced by `newParams`.
 
 The `Dyre.projectName` element is used to search for a custom configuration, the
 `Dyre.showError` element is called with compile errors to store the information
