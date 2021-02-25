@@ -75,7 +75,7 @@ Restarting is handled by the `Config.Dyre.Relaunch` module. To simply restart,
 discarding all state information, use the `relaunchMaster` function.
 
 If the state needs to be preserved, there are two pairs of functions available.
-When your program starts, you will want to use ether the `restoreTextState` or
+When your program starts, you will want to use either the `restoreTextState` or
 the `restoreBinaryState` function. Both of these take a default state which is
 returned when there is no persisted state to use.
 
