@@ -9,7 +9,7 @@ fi
 for TESTDIR in `find . -mindepth 1 -type d`; do
     echo "Running $TESTDIR"
     cd $TESTDIR
-    TEST_RESULT=`./runTest.sh 2>&1`
+    TEST_RESULT=`sh ./runTest.sh 2>&1`
     TEST_STATUS=$?
     if [ "$TEST_STATUS" -ne 0 ]; then
         echo "$TESTDIR failed; output:"
