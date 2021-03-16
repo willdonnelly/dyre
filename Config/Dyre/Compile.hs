@@ -7,13 +7,12 @@ module Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString ) where
 import Control.Concurrent ( rtsSupportsBoundThreads )
 import Control.Monad (when)
 import Data.Maybe (fromMaybe)
-import Data.Monoid (Alt(..))
 import System.IO         ( IOMode(WriteMode), withFile )
 import System.Environment (lookupEnv)
 import System.Exit       ( ExitCode(..) )
 import System.Process    ( runProcess, waitForProcess )
 import System.FilePath
-  ( (</>), dropTrailingPathSeparator, splitPath, takeDirectory )
+  ( (</>), dropTrailingPathSeparator, joinPath, splitPath, takeDirectory )
 import System.Directory  ( getCurrentDirectory, doesFileExist
                          , createDirectoryIfMissing
                          , renameFile, removeFile )
@@ -101,10 +100,7 @@ makeFlags params cfgFile outFile cacheDir' libsDir = do
     -- add extra include dirs
     , fmap ("-i" ++) (includeDirs params)
 
-    -- add -package-id <unit> if extra include dir is a cabal
-    -- store package matching the Dyre projectName
-    , maybe [] ((:) "-package-id" . pure) . getAlt
-      $ foldMap (Alt . getUnitId (projectName params)) (includeDirs params)
+    , includeDirs params >>= getCabalStoreGhcArgs (projectName params)
 
     , ghcOpts params
 
@@ -118,17 +114,23 @@ makeFlags params cfgFile outFile cacheDir' libsDir = do
   where prefix y = concatMap $ \x -> [y,x]
 
 -- | Given a path to lib dir, if it is a package in the Cabal
--- store that matches the projectName, extract the unit-id.
+-- store that matches the projectName, return GHC arguments
+-- to enable the Cabal store package database and expose the
+-- application's library package.
 --
-getUnitId :: String -> FilePath -> Maybe String
-getUnitId proj = go . fmap dropTrailingPathSeparator . splitPath
+getCabalStoreGhcArgs :: String -> FilePath -> [String]
+getCabalStoreGhcArgs proj = mkArgs . go . fmap dropTrailingPathSeparator . splitPath
   where
-  go (".cabal" : "store" : _hc : unit : _) =
+  go :: [String] -> Maybe (String {- unit-id -}, [String] {- package-db -})
+  go (".cabal" : "store" : hc : unit : _) =
     case splitOn '-' unit of
-      [s, _, _] | s == proj -> Just unit
+      [s, _, _] | s == proj -> Just (unit, [".cabal", "store", hc, "package.db"])
       _                     -> Nothing
-  go (_ : t@(_cabal : _store : _hc : _unit : _)) = go t
+  go (h : t@(_cabal : _store : _hc : _unit : _)) = fmap (h:) <$> go t
   go _ = Nothing
+
+  mkArgs Nothing = []
+  mkArgs (Just (unitId, pkgDb)) = ["-package-db", joinPath pkgDb, "-package-id", unitId]
 
 splitOn :: (Eq a) => a -> [a] -> [[a]]
 splitOn a l = case span (/= a) l of
