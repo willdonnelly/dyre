@@ -4,6 +4,7 @@ deals with error handling, and not the compilation itself /per se/.
 -}
 module Config.Dyre.Compile ( customCompile, getErrorPath, getErrorString ) where
 
+import Control.Applicative ((<|>))
 import Control.Concurrent ( rtsSupportsBoundThreads )
 import Control.Monad (when)
 import Data.Maybe (fromMaybe)
@@ -64,7 +65,9 @@ customCompile params@Params{statusOut = output} = do
             then return $ Just stackYamlPath
             else return Nothing
 
-        hc <- fromMaybe "ghc" <$> lookupEnv "HC"
+        hc' <- lookupEnv "HC"
+        nix_ghc <- lookupEnv "NIX_GHC"
+        let hc = fromMaybe "ghc" (hc' <|> nix_ghc)
         ghcProc <- maybe (runProcess hc flags (Just cacheDir') Nothing
                               Nothing Nothing (Just errHandle))
                          (\stackYaml' -> runProcess "stack" ("ghc" : "--stack-yaml" : stackYaml' : "--" : flags)
