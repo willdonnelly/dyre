@@ -8,6 +8,7 @@ import Control.Applicative ((<|>))
 import Control.Concurrent ( rtsSupportsBoundThreads )
 import Control.Monad (when)
 import Data.Maybe (fromMaybe)
+import Data.List (intercalate)
 import System.IO         ( IOMode(WriteMode), withFile )
 import System.Environment (lookupEnv)
 import System.Exit       ( ExitCode(..) )
@@ -125,15 +126,26 @@ getCabalStoreGhcArgs :: String -> FilePath -> [String]
 getCabalStoreGhcArgs proj = mkArgs . go . fmap dropTrailingPathSeparator . splitPath
   where
   go :: [String] -> Maybe (String {- unit-id -}, [String] {- package-db -})
-  go (".cabal" : "store" : hc : unit : _) =
-    case splitOn '-' unit of
-      [s, _, _] | s == proj -> Just (unit, [".cabal", "store", hc, "package.db"])
-      _                     -> Nothing
-  go (h : t@(_cabal : _store : _hc : _unit : _)) = fmap (h:) <$> go t
-  go _ = Nothing
+  go (".cabal" : "store" : hc : unit : _)
+    | pkgNameFromUnitId unit == Just proj
+    = Just (unit, [".cabal", "store", hc, "package.db"])
+  go (h : t@(_cabal : _store : _hc : _unit : _))
+    = fmap (h:) <$> go t
+  go _
+    = Nothing
 
   mkArgs Nothing = []
   mkArgs (Just (unitId, pkgDb)) = ["-package-db", joinPath pkgDb, "-package-id", unitId]
+
+-- | Extract package name from a unit-id, or return @Nothing@
+-- if the input does not look like a unit-id.
+--
+pkgNameFromUnitId :: String -> Maybe String
+pkgNameFromUnitId = fmap (intercalate "-") . go . splitOn '-'
+  where
+  go [s,_,_]  = Just [s]  -- drop the version and hash
+  go (s:rest) = (s:) <$> go rest
+  go []       = Nothing
 
 splitOn :: (Eq a) => a -> [a] -> [[a]]
 splitOn a l = case span (/= a) l of
