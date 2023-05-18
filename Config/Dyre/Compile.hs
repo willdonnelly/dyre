@@ -126,9 +126,10 @@ getCabalStoreGhcArgs :: String -> FilePath -> [String]
 getCabalStoreGhcArgs proj = mkArgs . go . fmap dropTrailingPathSeparator . splitPath
   where
   go :: [String] -> Maybe (String {- unit-id -}, [String] {- package-db -})
-  go (".cabal" : "store" : hc : unit : _)
-    | pkgNameFromUnitId unit == Just proj
-    = Just (unit, [".cabal", "store", hc, "package.db"])
+  go (dir : "store" : hc : unit : _)
+    | dir `elem` [".cabal", "cabal" {- probably under $XDG_STATE_HOME -}]
+    , pkgNameFromUnitId unit == Just proj
+    = Just (unit, [dir, "store", hc, "package.db"])
   go (h : t@(_cabal : _store : _hc : _unit : _))
     = fmap (h:) <$> go t
   go _
