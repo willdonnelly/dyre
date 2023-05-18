@@ -1,3 +1,14 @@
+# 0.9.2
+
+- Support Cabal store in `$XDG_STATE_HOME/cabal/store`, which is the
+  default location since cabal-install v3.10.
+
+- Fix Cabal store package-db detection when package name contains
+  hyphen characters.
+
+- Recognise `NIX_GHC` environment variable for better support of Nix
+  environments.  `HC`, if set, takes precedence.
+
 # 0.9.1
 
 - Tell GHC about the Cabal store package DB via the `-package-db`
