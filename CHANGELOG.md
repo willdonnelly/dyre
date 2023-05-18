@@ -1,3 +1,9 @@
+# 0.9.1
+
+- Tell GHC about the Cabal store package DB via the `-package-db`
+  option.  This fixes compilation with Cabal store-based
+  executables.
+
 # 0.9.0
 
 - `realMain` can now **return arbitrary types**.  To support this
