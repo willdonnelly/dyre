@@ -52,7 +52,7 @@ library
                    Config.Dyre.Compile,
                    Config.Dyre.Relaunch
   build-depends:
-    base >= 4.8 && < 5
+    base >= 4.18 && < 5
     , binary
     , directory >= 1.2.0.0
     , executable-path

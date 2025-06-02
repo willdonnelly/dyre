@@ -121,10 +121,9 @@ customOptions otherArgs = do
 -- | Look for the given flag in the argument array, and store
 --   its value under the given name if it exists.
 storeFlag :: [String] -> String -> String -> IO ()
-storeFlag args flag name
-    | null match  = return ()
-    | otherwise   = putValue "dyre" name $ drop (length flag) (head match)
-  where match = filter (isPrefixOf flag) args
+storeFlag args flag name = case filter (isPrefixOf flag) args of
+  []  -> pure ()
+  h:_ -> putValue "dyre" name $ drop (length flag) h
 
 -- | The array of all arguments that Dyre recognizes. Used to
 --   make sure none of them are visible past 'withDyreOptions'

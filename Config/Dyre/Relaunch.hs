@@ -33,7 +33,6 @@ module Config.Dyre.Relaunch
   ) where
 
 import Data.Maybe           ( fromMaybe )
-import System.IO            ( writeFile, readFile )
 import Data.Binary          ( Binary, encodeFile, decodeFile )
 import Control.Exception    ( try, SomeException )
 import System.FilePath      ( (</>) )
