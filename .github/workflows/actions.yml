@@ -15,6 +15,6 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: haskell/actions/setup@v1
+      - uses: haskell-actions/setup@v2.8
       - run: cabal build
       - run: cabal test --test-show-details=direct
