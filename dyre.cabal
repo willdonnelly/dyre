@@ -1,3 +1,4 @@
+cabal-version: 2.2
 name:          dyre
 version:       0.9.2
 category:      Development, Configuration
@@ -17,15 +18,16 @@ stability:     beta
 author:        Will Donnelly
 maintainer:    Fraser Tweedale <frase@frase.id.au>
 copyright:     (c) 2011-2023 Will Donnelly, Fraser Tweedale
-license:       BSD3
+license:       BSD-3-Clause
 license-file:  LICENSE
 
 build-type:    Simple
-cabal-version: >= 1.10
-tested-with: GHC ==9.6.7 || ==9.8.4 || ==9.10.2 || ==9.12.2
+tested-with:   GHC ==9.6.7 || ==9.8.4 || ==9.10.2 || ==9.12.2 || ==9.14.1
+
+extra-doc-files:
+    CHANGELOG.md
 
 extra-source-files:
-    CHANGELOG.md
     Tests/README.mkd
     Tests/*.sh
     Tests/basic/*.hs
@@ -41,9 +43,16 @@ source-repository head
   type:      git
   location:  https://github.com/willdonnelly/dyre.git
 
-library
+common common
   default-language: Haskell2010
   ghc-options: -Wall
+  build-depends:
+    base >= 4.18 && < 5
+    , directory >= 1.2.0.0
+    , process
+
+library
+  import: common
   exposed-modules: Config.Dyre,
                    Config.Dyre.Paths,
                    Config.Dyre.Compat,
@@ -52,13 +61,10 @@ library
                    Config.Dyre.Compile,
                    Config.Dyre.Relaunch
   build-depends:
-    base >= 4.18 && < 5
     , binary
-    , directory >= 1.2.0.0
     , executable-path
     , filepath
     , io-storage
-    , process
     , time
     , xdg-basedir
 
@@ -68,13 +74,7 @@ library
       build-depends: unix
 
 test-suite tests
+  import: common
   type:             exitcode-stdio-1.0
-  default-language: Haskell2010
   hs-source-dirs:   test
   main-is:          Main.hs
-  ghc-options:      -Wall
-  build-depends:
-    base
-    , directory >= 1.2.0.0
-    , process
-    , dyre
